@@ -94,10 +94,11 @@ async function _fallback(input, keepStats = true){
         csv.write(toWrite, 'blockchain', 'execute', 'fallback', formattedCon.name);
     }
 
-    console.log('fallback executed');
+    console.log('Fallback executed');
 }
 
 
+// TODO: split in two: send, sign with web3, sign with ethereumjs
 async function send(input, account){
     try{
         let accountTo = formattedCon.contractAddress;

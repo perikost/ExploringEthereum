@@ -1,5 +1,5 @@
 const fs = require('fs');
-const contractsPath = './contracts/';
+const contractsPath = './compiled_contracts/';
 const formattedContractsPath = './formatted_contracts';
 
 function formatContract(con){
