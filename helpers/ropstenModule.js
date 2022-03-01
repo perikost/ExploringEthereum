@@ -19,6 +19,7 @@ var con;
 var formattedCon;
 var signMethod;
 var fork; // TODO: pass this as a value in _loadBlockchain()
+var csvObject;
 
 // TODO: maybe make capitalize the vars above to be able to tell them apart easily
 
@@ -29,6 +30,7 @@ async function _loadBlockchain(provider = 'localhost',  signMeth = 'Web3'){
 
     web3 = new Web3(new Web3.providers.HttpProvider(provider));
     signMethod = signMeth;
+    csvObject = new CSV();
 }
 
 
@@ -61,11 +63,10 @@ async function _sendData(input, keepStats = true) {
 
     if(keepStats){
         // class
-        // let csvObject = new CSV('blockchain', 'execute', 'send_data');
-        // csvObject.write(toWrite);
+        csvObject.writeStats(toWrite, 'blockchain', 'execute', 'send_data');
 
         // normal
-        csv.write(toWrite, 'blockchain', 'execute', 'send_data');
+        // csv.write(toWrite, 'blockchain', 'execute', 'send_data');
     }
 
     console.log('Data was sent');
@@ -87,11 +88,10 @@ async function _fallback(input, keepStats = true){
 
     if(keepStats){
         // class
-        // let csvObject = new CSV('blockchain', 'execute', name, formattedCon.name);
-        // csvObject.write(toWrite);
+        csvObject.writeStats(toWrite, 'blockchain', 'execute', 'fallback', formattedCon.name);
 
         // normal
-        csv.write(toWrite, 'blockchain', 'execute', 'fallback', formattedCon.name);
+        // csv.write(toWrite, 'blockchain', 'execute', 'fallback', formattedCon.name);
     }
 
     console.log('Fallback executed');
@@ -200,11 +200,10 @@ async function executeFunction(name, {values = [],  keepStats = true} = {}){
             let toWrite = [txHash, Date().slice(0,24), info.type, info.size, cost, executionTime];
         
             // class
-            // let csvObject = new CSV('blockchain', 'execute', name, formattedCon.name);
-            // csvObject.write(toWrite);
+            csvObject.writeStats(toWrite, 'blockchain', 'execute', name, formattedCon.name);
         
             // normal
-            csv.write(toWrite, 'blockchain', 'execute', name, formattedCon.name);
+            // csv.write(toWrite, 'blockchain', 'execute', name, formattedCon.name);
         }
 
     }catch(error){
@@ -261,11 +260,10 @@ async function executeGetter(name, {values = [],  keepStats = true} = {}){
             let toWrite = [Date().slice(0,24), info.type, info.size, executionTime];
 
             //class
-            // let csvObject = new CSV('blockchain', 'retrieveStorage', name, formattedCon.name);
-            // csvObject.write(toWrite);
+            csvObject.writeStats(toWrite, 'blockchain', 'retrieveStorage', name, formattedCon.name);
 
             // normal
-            csv.write(toWrite, 'blockchain', 'retrieveStorage', name, formattedCon.name);
+            // csv.write(toWrite, 'blockchain', 'retrieveStorage', name, formattedCon.name);
         }
         return result;
 
@@ -341,12 +339,12 @@ async function _retrieveEvents(keepStats = true){
                 let id = ',';
                 if(indexName == 'id') id = indexValue;
                 let toWrite = [Date().slice(0,24),id, results.length, info.type, info.size, executionTime, decodingTime, totalTime];
+
                 //class
-                // let csvObject = new CSV('blockchain', 'retrieve_Events', name, formattedCon.name);
-                // csvObject.write(toWrite);
+                csvObject.writeStats(toWrite, 'blockchain', 'retrieve_Events', name, formattedCon.name);
 
                 // normal
-                csv.write(toWrite, 'blockchain', 'retrieve_Events', name, formattedCon.name);
+                // csv.write(toWrite, 'blockchain', 'retrieve_Events', name, formattedCon.name);
             }
 
 
@@ -410,11 +408,10 @@ async function _retrieveIndexedEvents(keepStats = true){
                 if(indexName == 'id') id = indexValue;
                 let toWrite = [Date().slice(0,24),id, info.type, info.size, executionTime, decodingTime, totalTime];
                 //class
-                // let csvObject = new CSV('blockchain', 'retrieve_Indexed_Events', name, formattedCon.name);
-                // csvObject.write(toWrite);
+                csvObject.writeStats(toWrite, 'blockchain', 'retrieve_Indexed_Events', name, formattedCon.name);
 
                 // normal
-                csv.write(toWrite, 'blockchain', 'retrieve_Indexed_Events', name, formattedCon.name);
+                // csv.write(toWrite, 'blockchain', 'retrieve_Indexed_Events', name, formattedCon.name);
             }
 
 
@@ -476,11 +473,10 @@ async function _retrieveAnonymousEvents(keepStats = true) {
                 if(indexName == 'id') id = indexValue;
                 let toWrite = [Date().slice(0,24),id, info.type, info.size, retrievalTime, decodingTime, totalTime];
                 //class
-                // let csvObject = new CSV('blockchain', 'retrieve_Anonymous', name, formattedCon.name);
-                // csvObject.write(toWrite);
+                csvObject.writeStats(toWrite, 'blockchain', 'retrieve_Anonymous_Events', name, formattedCon.name);
 
                 // normal
-                csv.write(toWrite, 'blockchain', 'retrieve_Anonymous_Events', name, formattedCon.name);
+                // csv.write(toWrite, 'blockchain', 'retrieve_Anonymous_Events', name, formattedCon.name);
             }
 
 
@@ -516,10 +512,10 @@ async function _retrievePlainTransactionData(path, keepStats = true) {
             if(keepStats){
                 //class
                 // let csvObject = new CSV('blockchain', 'retrieve_txData', name);
-                // csvObject.write(toWrite);
+                csvObject.writeStats(toWrite, 'blockchain', 'retrieve_txData', name);
 
                 // normal
-                csv.write(toWrite, 'blockchain', 'retrieve_txData', name);
+                // csv.write(toWrite, 'blockchain', 'retrieve_txData', name);
             }
             console.log(`Retrieval time (txData) : `, result.retrievalTime, 'Result: ', result.decodedInput.length);
             await utils.sleep(1);
