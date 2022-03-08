@@ -18,8 +18,8 @@ const HEADERS = {
         retrieve_txData : ['Date', 'Type', 'Size (Bytes)', 'Retrieval Time (ms)\n']
     },
     ipfs:{
-        upload : ['CID', 'Date','Size (Bytes)', 'Upload Time (ms)\n'],
-        retrieve : ['Date', 'Size (Bytes)', 'Retrieval Time (ms)\n'],
+        upload : ['Date', 'CID', 'Size in Repo(Bytes)', 'True Size(Bytes)', 'Upload Time (ms)\n'],
+        retrieve : ['Date', 'Size in Repo(Bytes)', 'True Size(Bytes)', 'Retrieval Time (ms)\n'],
         upload_blockchain : executeHeaders,
         retrieve_Storage : storageHeaders,
         retrieve_Storage_All : ['Date','ID','Type', 'Size (Bytes)','Retrieval Time (ms)\n'],
@@ -57,9 +57,10 @@ class _CSV {
             
             this.folderPath = path.join(this.folderPath, mode)
             this.csvPath = path.join(this.folderPath, `${csvName}.csv`);
-        }else if ((platform == 'ipfs' || platform == 'swarm')){
+        }else if (platform == 'ipfs' || platform == 'swarm'){
             // TODO: save to Contracts.....pass con.name in ipfs-swarmRopsten
-            this.csvPath = this.folderPath + `${mode}.csv`;
+            this.folderPath = path.join(this.folderPath, platform, mode)
+            this.csvPath = path.join(this.folderPath, `${csvName}.csv`);
         }else{
             throw 'Error : Unefined platform';
         }
@@ -159,7 +160,7 @@ function readLines (filePath){
     return csv;
 }
 
-function readAsArray (filePath){
+function readCsvAsArray (filePath){
     let outer = [];
     let csv = fs.readFileSync(filePath, 'utf8');
 
@@ -221,7 +222,7 @@ function _average(filePath){
             _average(pathToItem);
         }
         else {
-            let csv = readAsArray(pathToItem);
+            let csv = readCsvAsArray(pathToItem);
             average(csv, pathToItem);
         }
     }
@@ -230,5 +231,6 @@ function _average(filePath){
 
 module.exports = {
     CSV : _CSV,
-    average : _average
+    average : _average,
+    readCsvAsArray : readCsvAsArray
 };

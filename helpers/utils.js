@@ -1,4 +1,6 @@
 const randomstring = require("randomstring");
+const path = require('path');
+const CSV = require('./csvClassModule.js');
 const provider = `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`;
 const Web3 = require('web3');
 const web3 = new Web3(new Web3.providers.HttpProvider(provider));
@@ -67,6 +69,58 @@ function getRandom_bytes(length){
     return web3.utils.toHex(str);
 }
 
+
+
+
+function _getIdentifiers(platform, rootFolder = './csv_records'){
+    let headerToSearch;
+    if(platform == 'ipfs') headerToSearch = 'CID';
+    else headerToSearch = 'Hash';
+
+    let csvsFolder = chooseCsvFolder(rootFolder);
+    let folders = fs.readdirSync(csvsFolder);
+
+    let platformIndex = folders.indexOf(platform);
+    if(platformIndex < 0){
+        console.log('Could not find uploaded cids');
+        return null;
+    }
+
+    let platformFolder = path.join(csvsFolder, folders[platformIndex], 'upload');
+    console.log(platformFolder);
+
+    let identifiers = [];
+    for(const csvPath of fs.readdirSync(platformFolder)){
+        let info = CSV.readCsvAsArray(path.join(platformFolder, csvPath));
+        
+        // get the column containing the cids, excluding the first element (header) 
+        let ids = info.map(line => { return line[info[0].indexOf(headerToSearch)]; });
+        ids = ids.slice(1);
+        identifiers.push(...ids);
+    }
+    return identifiers;
+}
+
+function chooseCsvFolder(rootFolder){
+    const folders = fs.existsSync(rootFolder)? fs.readdirSync(rootFolder) : null;
+    if(!folders) {
+        console.log(`Could not find folder '${rootFolder}' cids`);
+        return null;
+    }
+
+    console.log('CSV records folders:');
+    for(let [index, folder] of folders.entries()) console.log(`(${index}) `, folder);
+    
+    console.log('');
+    let choice = Number(prompt('Choose folder to read from '));
+
+    if (choice >=0 && choice <= folders.length) return path.join(rootFolder, folders[choice]);
+    else{
+        console.log('Chosen folder out of bounds.');
+        return null;
+    }
+}
+
 module.exports = {
     sleep : _sleep,
     toHex : _toHex,
@@ -74,5 +128,6 @@ module.exports = {
     getRandomInput : _getRandomInput,
     getRandomString : getRandom_string,
     getRandomUint : getRandom_uint,
-    getRandomBytes : getRandom_bytes
+    getRandomBytes : getRandom_bytes,
+    getIdentifiers : _getIdentifiers
 };
