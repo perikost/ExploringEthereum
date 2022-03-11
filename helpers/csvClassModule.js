@@ -28,7 +28,7 @@ const HEADERS = {
         retrieve_Indexed_Events : indexedEventHeaders
     },
     swarm:{
-        upload : ['Hash', 'Date', 'Upload Time (ms)'],
+        upload : ['Date', 'Hash', 'Upload Time (ms)'],
         retrieve : ['Date', 'Retrieval Time (ms)'],
         upload_blockchain : executeHeaders,
         retrieve_Storage : storageHeaders,
