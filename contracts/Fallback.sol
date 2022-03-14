@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.1;
+pragma solidity 0.8.12;
 
-contract Exp{
+contract Fallback{
     uint public counter = 1;
 
-    event log(uint indexed id);
+    event logFallback(uint id);
 
     fallback() external {
-        emit log(counter);
+        emit logFallback(counter);
         counter++;
     }
 }

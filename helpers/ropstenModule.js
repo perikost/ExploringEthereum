@@ -23,18 +23,19 @@ var csvObject;
 
 // TODO: maybe make capitalize the vars above to be able to tell them apart easily
 
-async function _loadBlockchain(provider = 'localhost',  signMeth = 'Web3'){ 
+function _loadBlockchain({provider = 'localhost',  signMeth = 'Web3', hardFork = 'london'} = {}){ 
     // TODO: improve
     if(provider != 'localhost') provider = `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`;
     else provider = 'http://localhost:8545'
 
     web3 = new Web3(new Web3.providers.HttpProvider(provider));
     signMethod = signMeth;
+    fork = hardFork;
     csvObject = new CSV();
 }
 
 
-async function _config(contract, signMeth = 'Web3'){  
+function _config(contract, signMeth = 'Web3'){  
     // signMethod can be 1) 'web3' -> to sign using Web3
     //  2) anything else ->  to sign using ethereumjs-tx
 
@@ -59,7 +60,10 @@ async function _sendData(input, keepStats = true) {
     let cost = result.txReceipt.gasUsed;
     let info = type(input);
 
-    let toWrite = [txHash, Date().slice(0,24), info.type, info.size, cost, executionTime];
+    let toWrite = {
+        basic: [txHash, Date().slice(0,24), cost, executionTime],
+        inputInfo: info
+    };
 
     if(keepStats){
         // class
@@ -68,8 +72,6 @@ async function _sendData(input, keepStats = true) {
         // normal
         // csv.write(toWrite, 'blockchain', 'execute', 'send_data');
     }
-
-    console.log('Data was sent');
 }
 
 
@@ -84,7 +86,10 @@ async function _fallback(input, keepStats = true){
     let cost = result.txReceipt.gasUsed;
     let info = type(input);
 
-    let toWrite = [txHash, Date().slice(0,24), info.type, info.size, cost, executionTime];
+    let toWrite = {
+        basic: [txHash, Date().slice(0,24), cost, executionTime],
+        inputInfo: info
+    };
 
     if(keepStats){
         // class
@@ -93,15 +98,17 @@ async function _fallback(input, keepStats = true){
         // normal
         // csv.write(toWrite, 'blockchain', 'execute', 'fallback', formattedCon.name);
     }
-
-    console.log('Fallback executed');
 }
 
 
 // TODO: split in two: send, sign with web3, sign with ethereumjs
 async function send(input, account){
     try{
-        let accountTo = formattedCon.contractAddress;
+        let nodeVersion = await web3.eth.getNodeInfo();
+        console.log('Node version:', nodeVersion);
+
+        let accountTo
+        if(formattedCon) accountTo = formattedCon.contractAddress;
         if(account) accountTo = account;
         let nonce = await web3.eth.getTransactionCount(process.env.MY_ADDRESS);
 
@@ -127,7 +134,7 @@ async function send(input, account){
 
         let gasEstimate = await web3.eth.estimateGas(rawTx);
         let gasToSend = 10000 * Math.ceil(gasEstimate / 10000);
-        console.log('Estimate',gasEstimate);
+        console.log('Estimated gas:',gasEstimate);
 
         if(signMethod == 'web3'){
             rawTx.gas = gasToSend;
@@ -142,7 +149,7 @@ async function send(input, account){
             var transaction = '0x' + serializedTx.toString('hex');
         }
 
-        console.log('sending');
+        console.log('Waiting for transaction to be mined...');
 
         let begin = performance.now();
         let txReceipt = await web3.eth.sendSignedTransaction(transaction);
@@ -153,7 +160,7 @@ async function send(input, account){
             txReceipt : txReceipt
         };
     }catch(err){
-        console.log('Could not send transaction', err);
+        console.log('Transaction not completed. Error: ', err);
         process.exit();
     }
 }
@@ -169,12 +176,12 @@ async function executeFunction(name, {values = [],  keepStats = true} = {}){
                 return;
             }
 
-            func.args.forEach(arg => {
-                if(Object.keys(arg).length != 0){
-                    if(arg.value){
-                        values.push(arg.value);
+            func.inputs.forEach(input => {
+                if(Object.keys(input).length != 0){
+                    if(input.value){
+                        values.push(input.value);
                     }else{
-                        values.push(utils.getRandomInput(arg));
+                        values.push(utils.getRandomInput(input));
                     }
                 }
             });
@@ -196,8 +203,11 @@ async function executeFunction(name, {values = [],  keepStats = true} = {}){
             //    columns (headers): input1 info, input2 info 
             //    rows: type_of_input1 : size_of_input1...etc
             // type() also needs to be more abstract 
-            let info = type(values[0]);
-            let toWrite = [txHash, Date().slice(0,24), info.type, info.size, cost, executionTime];
+            let info = type(values);
+            let toWrite = {
+                basic: [txHash, Date().slice(0,24), cost, executionTime],
+                inputInfo: info
+            };
         
             // class
             csvObject.writeStats(toWrite, 'blockchain', 'execute', name, formattedCon.name);
@@ -213,14 +223,14 @@ async function executeFunction(name, {values = [],  keepStats = true} = {}){
 }
 
 
-async function _executeFunctions(keepStats = true){
+async function _executeFunctions(values = [], keepStats = true){
     if(formattedCon.functions.length == 0) return; //this contract doesn't have functions, so return
 
     for(var func of formattedCon.functions){
         if(!func.execute) continue; // don't execute the function
 
         let name = func.name;
-        await executeFunction(name, {keepStats : keepStats});
+        await executeFunction(name, {values : values, keepStats : keepStats});
     }
 }
 
@@ -231,12 +241,12 @@ async function executeGetter(name, {values = [],  keepStats = true} = {}){
         if(values.length == 0){
             let getter = getGetter(name);
 
-            getter.args.forEach(arg => {
-                if(Object.keys(arg).length != 0){
-                    if(arg.value){
-                        values.push(arg.value);
+            getter.inputs.forEach(input => {
+                if(Object.keys(input).length != 0){
+                    if(input.value){
+                        values.push(input.value);
                     }else{
-                        values.push(utils.getRandomInput(arg));
+                        values.push(utils.getRandomInput(input));
                     }
                 }
             });
@@ -257,7 +267,10 @@ async function executeGetter(name, {values = [],  keepStats = true} = {}){
             //    rows: type_of_input1 : size_of_input1...etc
             // type() also needs to be more abstract
             let info = type(result);
-            let toWrite = [Date().slice(0,24), info.type, info.size, executionTime];
+            let toWrite = {
+                basic: [txHash, Date().slice(0,24), cost, executionTime],
+                inputInfo: info
+            };
 
             //class
             csvObject.writeStats(toWrite, 'blockchain', 'retrieveStorage', name, formattedCon.name);
@@ -338,7 +351,10 @@ async function _retrieveEvents(keepStats = true){
                 let totalTime = Number(executionTime) + Number(decodingTime);
                 let id = ',';
                 if(indexName == 'id') id = indexValue;
-                let toWrite = [Date().slice(0,24),id, results.length, info.type, info.size, executionTime, decodingTime, totalTime];
+                let toWrite = {
+                    basic: [Date().slice(0,24),id, results.length, executionTime, decodingTime, totalTime],
+                    inputInfo: info
+                };
 
                 //class
                 csvObject.writeStats(toWrite, 'blockchain', 'retrieve_Events', name, formattedCon.name);
@@ -406,7 +422,11 @@ async function _retrieveIndexedEvents(keepStats = true){
                 let totalTime = Number(executionTime) + Number(decodingTime);
                 let id = ',';
                 if(indexName == 'id') id = indexValue;
-                let toWrite = [Date().slice(0,24),id, info.type, info.size, executionTime, decodingTime, totalTime];
+
+                let toWrite = {
+                    basic: [Date().slice(0,24),id, executionTime, decodingTime, totalTime],
+                    inputInfo: info
+                };
                 //class
                 csvObject.writeStats(toWrite, 'blockchain', 'retrieve_Indexed_Events', name, formattedCon.name);
 
@@ -471,7 +491,11 @@ async function _retrieveAnonymousEvents(keepStats = true) {
                 let totalTime = Number(retrievalTime) + Number(decodingTime);
                 let id = ',';
                 if(indexName == 'id') id = indexValue;
-                let toWrite = [Date().slice(0,24),id, info.type, info.size, retrievalTime, decodingTime, totalTime];
+
+                let toWrite = {
+                    basic: [Date().slice(0,24),id, retrievalTime, decodingTime, totalTime],
+                    inputInfo: info
+                };
                 //class
                 csvObject.writeStats(toWrite, 'blockchain', 'retrieve_Anonymous_Events', name, formattedCon.name);
 
@@ -507,7 +531,11 @@ async function _retrievePlainTransactionData(path, keepStats = true) {
             // let retrievalTime = (performance.now() - begin).toFixed(4);
 
             let info = type(result.decodedInput);
-            let toWrite = [Date().slice(0,24), info.type, info.size, result.retrievalTime];
+            let toWrite = {
+                basic: [Date().slice(0,24),id, result.retrievalTime],
+                inputInfo: info
+            };
+    
 
             if(keepStats){
                 //class
@@ -541,7 +569,7 @@ async function retrieveTxData(txHash) {
     };
 }
 
-
+// FIXME: must change cause now we have 2 parameters not one
 async function retrieveUnused(txHash, type) {
     // TODO: measure time as in retrieveTxData
     let tx = await web3.eth.getTransaction(txHash);
@@ -553,16 +581,21 @@ async function retrieveUnused(txHash, type) {
 }
 
 
-function type(input){
-    if(!input) return {type : 'No input', size : 'No input'};
-    if(typeof(input) != 'string') return {type : typeof(input), size : 'Not measured'};
-    if( input.slice(0,2) == '0x'){ //could also use web3.utils.isHexStrict()
-        let length = input.slice(2).length / 2;
-        if( length == 32) return {type : 'Bytes32', size : length};
-        return {type : 'Bytes', size : length};
-    }
-    let length = input.length;
-    return {type : typeof(input), size : length};
+function type(values){
+    if(typeof(values) !== 'object') values = [values]
+    if(!values) return {type : 'No values', size : 'No values'};
+
+    let info = values.map(val => {
+        if(typeof(val) != 'string') return {type : typeof(val), size : 'Not measured'};
+        if( val.slice(0,2) == '0x'){ //could also use web3.utils.isHexStrict()
+            let length = val.slice(2).length / 2;
+            if( length == 32) return {type : 'Bytes32', size : length};
+            return {type : 'Bytes', size : length};
+        }
+        let length = val.length;
+        return {type : typeof(val), size : length};
+    });
+    return info;
 }
 
 

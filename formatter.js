@@ -1,12 +1,24 @@
 const fs = require('fs');
-const contractsPath = './compiled_contracts/';
+const assert = require('assert');
+const path = require('path')
+const defaultContractsPath = './compiled_contracts/';
 const formattedContractsPath = './formatted_contracts';
+const { program } = require('commander');
+var contractsPath;
+
+program
+    .description('A util to format compiled contracts') 
+    .option('-p, --path <string>', 'path to compiled contracts');
+program.parse();
+
+const options = program.opts();
+
 
 function formatContract(con){
     let formattedCon = {};
 
     formattedCon.name = con.contractName;
-    formattedCon.jsonPath = '.' + contractsPath + con.contractName + '.json';
+    formattedCon.jsonPath = path.resolve(path.join(contractsPath, `${con.contractName}.json`));
     formattedCon.contractAddress = "fill in the contract's address";
     formattedCon.fallback = false;
     formattedCon.functions = [];
@@ -20,9 +32,9 @@ function formatContract(con){
     abi.forEach((item, i) => {
         if(item.type == 'event'){
             let indexed = false;
-            event = {};
+            let event = {};
             event.name = item.name;
-            event.retrieve = false;
+            event.retrieve = true;
 
             item.inputs.forEach((input, i) => {
                 if(input.indexed) indexed = true;
@@ -56,8 +68,8 @@ function formatContract(con){
 
             let func = {};
             func.name = item.name;
-            func.execute = false;
-            func.args = [];  // TODO: change to func.inputs. Apply to alla files 
+            func.execute = true;
+            func.inputs = [];
             func.outputs = []
 
             if(item.constant){
@@ -76,7 +88,7 @@ function formatContract(con){
                         };
     
                         if(!input.type.includes("uint") || !input.type.match(/(\d+)/)) arg.length = null;
-                        func.args.push(arg);
+                        func.inputs.push(arg);
                     });
                 }
 
@@ -90,7 +102,7 @@ function formatContract(con){
                         };
     
                         if(!input.type.includes("uint") || !input.type.match(/(\d+)/)) arg.length = null;
-                        func.args.push(arg);
+                        func.inputs.push(arg);
                     });
                 }
 
@@ -102,17 +114,33 @@ function formatContract(con){
     return formattedCon;
 }
 
+function getJsonFiles(){
+    let files = fs.readdirSync(contractsPath).filter(file => {
+        return file.includes('.json');
+    })
+
+    assert(files.length > 0, `No JSON files in ${contractsPath} to format`);
+    return files;
+}
 
 (function(){
+    if(options.path){
+        assert(fs.existsSync(options.path), `No such directory: '${options.path}'`);
+        contractsPath = options.path;
+    }else{
+        assert(fs.existsSync(defaultContractsPath), `No such directory: '${defaultContractsPath}'`);
+        contractsPath = defaultContractsPath;
+    }
 
     if (!fs.existsSync(formattedContractsPath)){
         fs.mkdirSync(formattedContractsPath);
     }
 
-    fs.readdirSync(contractsPath).forEach(file => {
-        let con = fs.readFileSync(contractsPath + '/' + file, 'utf8');
+    let files = getJsonFiles();
+    files.forEach(file => {
+        let con = fs.readFileSync(path.join(contractsPath, file), 'utf8');
         let formattedCon = formatContract(JSON.parse(con));
 
-         fs.writeFileSync(formattedContractsPath + '/' + formattedCon.name + '.json', JSON.stringify(formattedCon, null, 2));
+         fs.writeFileSync(path.join(formattedContractsPath, `${formattedCon.name}.json`), JSON.stringify(formattedCon, null, 2));
     });
 })();

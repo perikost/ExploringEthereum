@@ -17,22 +17,33 @@ function _toHex(input){
     return web3.utils.toHex(input);
 }
 
-function _getContracts(){
+
+// blockchain
+function _getContracts(chosenContracts){
     let availableContracts = fs.readdirSync(formattedContractsPath);
     let contracts = [];
 
-    availableContracts.forEach((file,i) => {
-        console.log(`(${i}) ${file}`);
-    });
-
-    let chosenContracts = prompt('Which contracts do you want to execute (ids separated by comma) ?');
-    chosenContracts = chosenContracts.split(',');
-    chosenContracts.forEach(id => {
-        let conName = availableContracts[Number(id)];
-        let con = fs.readFileSync(formattedContractsPath + '/' + conName, 'utf8');
+    availableContracts.forEach(file => {
+        let con = fs.readFileSync(path.join(formattedContractsPath, file), 'utf8');
         contracts.push(JSON.parse(con));
     });
 
+    if(chosenContracts){
+        if(chosenContracts != 'all'){
+            contracts = contracts.filter(con => {
+                return chosenContracts.includes(con.name);
+            });
+        }
+    }else{
+        availableContracts.forEach((file,id) => {
+            console.log(`(${id}) ${file}`);
+        });
+        chosenIds = prompt('Which contracts do you want to execute (ids separated by comma) ?');
+        chosenIds = chosenIds.split(',');
+        contracts = contracts.filter((con, id) => {
+            return chosenIds.indexOf(String(id)) >= 0;
+        });
+    }
     return contracts;
 }
 
@@ -68,10 +79,10 @@ function getRandom_bytes(length){
     console.log(length);
     return web3.utils.toHex(str);
 }
+// blockchain
 
 
-
-
+// IPFS & Swarm
 function _getIdentifiers(platform, rootFolder = './csv_records'){
     let headerToSearch;
     if(platform == 'ipfs') headerToSearch = 'CID';
@@ -120,6 +131,7 @@ function chooseCsvFolder(rootFolder){
         return null;
     }
 }
+// IPFS & Swarm
 
 module.exports = {
     sleep : _sleep,

@@ -3,10 +3,10 @@ const path = require('path');
 const assert = require('assert');
 const utils = require('./utils.js');
 const prompt = require('prompt-sync')({sigint: true});
-const eventHeaders = ['Date','Total Events','ID', 'Type', 'Size (Bytes)', 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)\n'];
-const indexedEventHeaders = ['Date','ID', 'Type', 'Size (Bytes)', 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)\n'];
-const storageHeaders = ['Date','Type', 'Size (Bytes)','Retrieval Time (ms)\n'];
-const executeHeaders = ['Transaction Hash', 'Date','Type', 'Size (Bytes)', 'Cost (gas)', 'Execution Time (ms)\n'];
+const eventHeaders = ['Date','Total Events','ID' , 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)'];
+const indexedEventHeaders = ['Date','ID' , 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)'];
+const storageHeaders = ['Date','Retrieval Time (ms)'];
+const executeHeaders = ['Transaction Hash', 'Date', 'Cost (gas)', 'Execution Time (ms)'];
 
 const HEADERS = {
     blockchain:{
@@ -14,24 +14,24 @@ const HEADERS = {
         retrieveStorage : storageHeaders,
         retrieve_Events : eventHeaders,
         retrieve_Indexed_Events : indexedEventHeaders,
-        retrieve_Anonymous_Events : ['Date','ID', 'Type', 'Size (Bytes)', 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)\n'],
-        retrieve_txData : ['Date', 'Type', 'Size (Bytes)', 'Retrieval Time (ms)\n']
+        retrieve_Anonymous_Events : ['Date','ID' , 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)'],
+        retrieve_txData : ['Date' , 'Retrieval Time (ms)']
     },
     ipfs:{
-        upload : ['Date', 'CID', 'Size in Repo(Bytes)', 'True Size(Bytes)', 'Upload Time (ms)\n'],
-        retrieve : ['Date', 'Size in Repo(Bytes)', 'True Size(Bytes)', 'Retrieval Time (ms)\n'],
+        upload : ['Date', 'CID', 'Size in Repo(Bytes)', 'True Size(Bytes)', 'Upload Time (ms)'],
+        retrieve : ['Date', 'Size in Repo(Bytes)', 'True Size(Bytes)', 'Retrieval Time (ms)'],
         upload_blockchain : executeHeaders,
         retrieve_Storage : storageHeaders,
-        retrieve_Storage_All : ['Date','ID','Type', 'Size (Bytes)','Retrieval Time (ms)\n'],
+        retrieve_Storage_All : ['Date','ID','Retrieval Time (ms)'],
         retrieve_Events : eventHeaders,
         retrieve_Indexed_Events : indexedEventHeaders
     },
     swarm:{
-        upload : ['Hash', 'Date','Size (Bytes)', 'Upload Time (ms)\n'],
-        retrieve : ['Date', 'Size (Bytes)', 'Retrieval Time (ms)\n'],
+        upload : ['Hash', 'Date', 'Upload Time (ms)'],
+        retrieve : ['Date', 'Retrieval Time (ms)'],
         upload_blockchain : executeHeaders,
         retrieve_Storage : storageHeaders,
-        retrieve_Storage_All : ['Date','ID','Type', 'Size (Bytes)','Retrieval Time (ms)\n'],
+        retrieve_Storage_All : ['Date','ID','Retrieval Time (ms)'],
         retrieve_Events : eventHeaders,
         retrieve_Indexed_Events : indexedEventHeaders
     }
@@ -42,7 +42,6 @@ class _CSV {
 
     constructor(rootFolder = './csv_records'){
         this.rootFolder = chooseRootFolder(rootFolder);
-        // console.log(this.folderPath);
         if(!this.rootFolder) this.rootFolder = createRootFolder(rootFolder);
         addNote(this.rootFolder);
     }
@@ -65,24 +64,40 @@ class _CSV {
             throw 'Error : Unefined platform';
         }
 
-        this.write(toWrite);
+        this.setStatsAndHeaders(toWrite)
+        this.write();
     }
 
-    write(toWrite){
-        let headers = HEADERS[this.platform][this.mode];
+    write(){
+        // let headers = HEADERS[this.platform][this.mode];
         // toWrite.unshift(fileName) to push something in the begining. Used to write extra field in swarm
 
         if(!fs.existsSync(this.folderPath)) fs.mkdirSync(this.folderPath, { recursive: true });
-        if(!fs.existsSync(this.csvPath)) fs.writeFileSync(this.csvPath, headers.toString());
+        if(!fs.existsSync(this.csvPath)) fs.writeFileSync(this.csvPath, this.headers.toString() + '\n');
 
-        fs.appendFileSync(this.csvPath, toWrite.toString() + '\n');
+        fs.appendFileSync(this.csvPath, this.toWrite.toString() + '\n');
+    }
+
+    setStatsAndHeaders(toWrite){
+        this.headers = JSON.parse(JSON.stringify(HEADERS[this.platform][this.mode]));
+        this.toWrite = toWrite.basic;
+
+        let info = [];
+        let headers = [];
+        toWrite.inputInfo.forEach(param => {
+            headers.push('Type', 'Size (Bytes)');
+            info.push(param.type, param.size);
+        })
+        
+        this.headers.push(...headers);
+        this.toWrite.push(...info);
     }
 }
 
 
 function chooseRootFolder(rootFolder){
     const folders = fs.existsSync(rootFolder)? fs.readdirSync(rootFolder) : null;
-    if(!folders) return null;
+    if(!folders || folders.length == 0) return null;
 
     console.log('');
     let add = prompt('Would you like to add the csv records to a previous folder (y/n)? ');
@@ -141,9 +156,9 @@ function addNote(folder){
             }
         }
 
-        let note = prompt('Please type your note...  ');
+        let note = prompt('Peaseyour note...  ');
         if(note){
-            note = new Date().toString() + '\t' + note;
+            note = new Date().toString().slice(0,24) + '\t' + note;
             fs.appendFileSync(file, note + '\n');
         }
     }
