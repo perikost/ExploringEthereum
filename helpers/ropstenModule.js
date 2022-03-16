@@ -23,7 +23,7 @@ var csvObject;
 
 // TODO: maybe make capitalize the vars above to be able to tell them apart easily
 
-function _loadBlockchain({provider = 'localhost',  signMeth = 'Web3', hardFork = 'london'} = {}){ 
+function _loadBlockchain({provider = 'localhost',  signMeth = 'web3', hardFork = 'london'} = {}){ 
     // TODO: improve
     if(provider != 'localhost') provider = `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`;
     else provider = 'http://localhost:8545'
@@ -32,10 +32,12 @@ function _loadBlockchain({provider = 'localhost',  signMeth = 'Web3', hardFork =
     signMethod = signMeth;
     fork = hardFork;
     csvObject = new CSV();
+    
+    return web3;
 }
 
 
-function _config(contract, signMeth = 'Web3'){  
+function _config(contract, signMeth = 'web3'){  
     // signMethod can be 1) 'web3' -> to sign using Web3
     //  2) anything else ->  to sign using ethereumjs-tx
 
@@ -100,6 +102,16 @@ async function _fallback(input, keepStats = true){
     }
 }
 
+async function getGaspriceBasedOnHistory(){
+    let latestBlock = await web3.eth.getBlockNumber();
+    let blockRange = 10;
+    let feeHistory = await web3.eth.getFeeHistory(blockRange, Number(latestBlock), [0, 100]);
+    let baseFeesToNumber = feeHistory.baseFeePerGas.map(fee => web3.utils.hexToNumber(fee));
+    let wei = baseFeesToNumber.reduce((a, b) => a + b, 0) 
+    wei /= baseFeesToNumber.length;
+    wei += Number(web3.utils.toWei('20', 'gwei'));
+    return Math.ceil(wei);
+}
 
 // TODO: split in two: send, sign with web3, sign with ethereumjs
 async function send(input, account){
@@ -111,12 +123,13 @@ async function send(input, account){
         if(formattedCon) accountTo = formattedCon.contractAddress;
         if(account) accountTo = account;
         let nonce = await web3.eth.getTransactionCount(process.env.MY_ADDRESS);
+        let gasprice = await getGaspriceBasedOnHistory();
 
         if(signMethod == 'web3'){
             var rawTx = {
                  nonce: nonce,
                  to: accountTo,
-                 gasPrice : web3.utils.toWei('20', 'gwei'),
+                 gasPrice : gasprice,
                  value: 0,
                  data: input,
                  chain: 'ropsten',
@@ -125,7 +138,7 @@ async function send(input, account){
         }else{
             var rawTx = {
                 nonce: web3.utils.toHex(nonce),
-                gasPrice: web3.utils.toHex(web3.utils.toWei('20', 'gwei')),
+                gasPrice: web3.utils.toHex(gasprice),
                 to: accountTo,
                 value: web3.utils.toHex(0),
                 data: input
@@ -610,6 +623,7 @@ function getGetter(name){
         if(name == getter.name) return getter;
     }
 }
+
 
 module.exports = {
     loadBlockchain : _loadBlockchain,
