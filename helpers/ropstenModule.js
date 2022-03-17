@@ -1,6 +1,7 @@
 require('dotenv').config();
 const csv = require('./csvModule.js');  //normal
 const CSV = require('./csvClassModule.js').CSV;  //class
+const TransactionDebugger = require('./helpers/debugger.js');
 const utils = require('./utils.js');
 const performance = require('perf_hooks').performance;
 const ethereumTx = require('ethereumjs-tx').Transaction;
@@ -20,6 +21,7 @@ var formattedCon;
 var signMethod;
 var fork; // TODO: pass this as a value in _loadBlockchain()
 var csvObject;
+var txDebugger;
 
 // TODO: maybe make capitalize the vars above to be able to tell them apart easily
 
@@ -32,6 +34,7 @@ function _loadBlockchain({provider = 'localhost',  signMeth = 'web3', hardFork =
     signMethod = signMeth;
     fork = hardFork;
     csvObject = new CSV();
+    txDebugger = new TransactionDebugger(web3);
     
     return web3;
 }
@@ -207,15 +210,7 @@ async function executeFunction(name, {values = [],  keepStats = true} = {}){
             let executionTime = result.executionTime;
             let txHash = result.txReceipt.transactionHash;
             let cost = result.txReceipt.gasUsed;
-            // TODO: 
-            // Make csv module more abstract.
-            // This only work for one input.
-            // Allow multiple inputs or don't record info for inputs
-            // Possible solution: one header for each input
-            //    e.g.,
-            //    columns (headers): input1 info, input2 info 
-            //    rows: type_of_input1 : size_of_input1...etc
-            // type() also needs to be more abstract 
+
             let info = type(values);
             let toWrite = {
                 basic: [txHash, Date().slice(0,24), cost, executionTime],
@@ -223,8 +218,9 @@ async function executeFunction(name, {values = [],  keepStats = true} = {}){
             };
         
             // class
-            csvObject.writeStats(toWrite, 'blockchain', 'execute', name, formattedCon.name);
-        
+            let folderPath = csvObject.writeStats(toWrite, 'blockchain', 'execute', name, formattedCon.name);
+
+            txDebugger.saveDebuggedTransaction(txHash, folderPath, Date().slice(0,24).replaceAll(' ', '_'));
             // normal
             // csv.write(toWrite, 'blockchain', 'execute', name, formattedCon.name);
         }
@@ -270,15 +266,6 @@ async function executeGetter(name, {values = [],  keepStats = true} = {}){
         let executionTime = (performance.now() - begin).toFixed(4);
 
         if(keepStats){
-            // TODO: 
-            // Make csv module more abstract.
-            // This only work for one input.
-            // Allow multiple inputs or don't record info for inputs
-            // Possible solution: one header for each input
-            //    e.g.,
-            //    columns (headers): input1 info, input2 info 
-            //    rows: type_of_input1 : size_of_input1...etc
-            // type() also needs to be more abstract
             let info = type(result);
             let toWrite = {
                 basic: [txHash, Date().slice(0,24), cost, executionTime],

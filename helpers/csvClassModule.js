@@ -68,16 +68,7 @@ class _CSV {
 
         this.setStatsAndHeaders(toWrite)
         this.write();
-    }
-
-    write(){
-        // let headers = HEADERS[this.platform][this.mode];
-        // toWrite.unshift(fileName) to push something in the begining. Used to write extra field in swarm
-
-        if(!fs.existsSync(this.folderPath)) fs.mkdirSync(this.folderPath, { recursive: true });
-        if(!fs.existsSync(this.csvPath)) fs.writeFileSync(this.csvPath, this.headers.toString() + '\n');
-
-        fs.appendFileSync(this.csvPath, this.toWrite.toString() + '\n');
+        return this.folderPath;
     }
 
     setStatsAndHeaders(toWrite){
@@ -93,6 +84,16 @@ class _CSV {
         
         this.headers.push(...headers);
         this.toWrite.push(...info);
+    }
+
+    write(){
+        // let headers = HEADERS[this.platform][this.mode];
+        // toWrite.unshift(fileName) to push something in the begining. Used to write extra field in swarm
+
+        if(!fs.existsSync(this.folderPath)) fs.mkdirSync(this.folderPath, { recursive: true });
+        if(!fs.existsSync(this.csvPath)) fs.writeFileSync(this.csvPath, this.headers.toString() + '\n');
+
+        fs.appendFileSync(this.csvPath, this.toWrite.toString() + '\n');
     }
 }
 
