@@ -24,10 +24,11 @@ module.exports = class TransactionDebugger {
         let steps = result.structLogs;
         steps.map((step, index) => step.step = index);
         let info = {
+            transactionHash: txHash,
             opcodesGas: steps.reduce((previousStep, currentStep) => {return {gasCost : previousStep.gasCost + currentStep.gasCost }}).gasCost,
             startGas: steps[0].gas,
             remainingGas: steps[steps.length - 1].gas,
-            totalGas: result.gas,
+            spentGas: result.gas,
             steps: steps
         }
         

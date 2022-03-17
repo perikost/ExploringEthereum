@@ -3,9 +3,9 @@ const utils = require('./helpers/utils.js');
 
 var contracts = [];
 
-function getRandomStrings(maxStringSize = 12288, step = 2){
+function getRandomStrings(start = 1, maxStringSize = 16384, step = 2){
     let randomStrings = [];
-    let i = 1;
+    let i = start;
     while(true){
         let input;
         if(i >= maxStringSize) {
@@ -25,7 +25,6 @@ function getRandomStrings(maxStringSize = 12288, step = 2){
 async function execute(input, reset){
     if(reset){
         await blockchain.executeFunction('reset');
-        console.log('\n Reset Successfully');
     }
 
     await blockchain.executeFunctions(input);
@@ -39,7 +38,6 @@ async function loopExecution({loops = 1,  executionType = 'functions', reset = f
 
         for(const [index, value] of getRandomStrings().entries()){
             await blockchain.sendData(value);
-            console.log('\n \n');
         }
 
     }else{
@@ -53,7 +51,6 @@ async function loopExecution({loops = 1,  executionType = 'functions', reset = f
                         if(con.name == 'Events') await execute([startingID + index, value], reset);
                         else await execute([value], reset);
                     }
-                    console.log('\n \n')
                 }
             }
         }
@@ -71,15 +68,15 @@ async function executeStorageContract() {
 async function executeRest() {
     contracts = utils.getContracts(['Events', 'Fallback', 'FallbackIndexed']);
 
-    await loopExecution({executionType: 'functions', startingID: 0});
+    // await loopExecution({executionType: 'functions', startingID: 0});
     await loopExecution({executionType: 'send_data'});  
-    await loopExecution({executionType: 'fallback'});
+    // await loopExecution({executionType: 'fallback'});
 }
 
 
 // run
-blockchain.loadBlockchain();
+blockchain.loadBlockchain({provider: 'infura'});
 (async () => {
-    await executeStorageContract();
+    // await executeStorageContract();
     await executeRest();
 })();

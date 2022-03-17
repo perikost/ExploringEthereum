@@ -1,0 +1,397 @@
+{
+  "name": "Events",
+  "jsonPath": "/home/perikost/nodejs/exploringEthereum/local_blockchain/build/contracts/Events.json",
+  "contractAddress": "0x7911881dB914d635a917e12EeC6eE925c772bF89",
+  "fallback": false,
+  "functions": [
+    {
+      "name": "log",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "uint256",
+          "value": null
+        },
+        {
+          "type": "string",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "logIndexed",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "uint256",
+          "value": null
+        },
+        {
+          "type": "string",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "Unused",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "uint256",
+          "value": null
+        },
+        {
+          "type": "string",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "UnusedIndexed",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "uint256",
+          "value": null
+        },
+        {
+          "type": "string",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "logAnonym",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "uint256",
+          "value": null
+        },
+        {
+          "type": "string",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "logAnonymIndexed",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "uint256",
+          "value": null
+        },
+        {
+          "type": "string",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    }
+  ],
+  "getters": [],
+  "events": [
+    {
+      "name": "logData",
+      "retrieve": true,
+      "toFind": "data",
+      "paramType": "string",
+      "unused": false,
+      "fallback": false,
+      "index": {
+        "name": "id",
+        "value": null
+      }
+    },
+    {
+      "name": "logUnused",
+      "retrieve": true,
+      "toFind": "data",
+      "paramType": "string",
+      "unused": true,
+      "fallback": false,
+      "index": {
+        "name": "id",
+        "value": null
+      }
+    }
+  ],
+  "indexedEvents": [
+    {
+      "name": "logDataIndexed",
+      "retrieve": true,
+      "toFind": "data",
+      "paramType": "string",
+      "unused": false,
+      "fallback": false,
+      "index": {
+        "name": "id",
+        "value": null
+      }
+    },
+    {
+      "name": "logUnusedIndexed",
+      "retrieve": true,
+      "toFind": "data",
+      "paramType": "string",
+      "unused": true,
+      "fallback": false,
+      "index": {
+        "name": "id",
+        "value": null
+      }
+    }
+  ],
+  "anonymousEvents": [
+    {
+      "name": "logDataAnonym",
+      "retrieve": true,
+      "toFind": "data",
+      "paramType": "string",
+      "unused": false,
+      "fallback": false,
+      "index": {
+        "name": "id",
+        "value": null
+      },
+      "indexed": false
+    },
+    {
+      "name": "logDataAnonymIndexed",
+      "retrieve": true,
+      "toFind": "data",
+      "paramType": "string",
+      "unused": false,
+      "fallback": false,
+      "index": {
+        "name": "id",
+        "value": null
+      },
+      "indexed": true
+    }
+  ],
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "data",
+          "type": "string"
+        }
+      ],
+      "name": "logData",
+      "type": "event"
+    },
+    {
+      "anonymous": true,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "data",
+          "type": "string"
+        }
+      ],
+      "name": "logDataAnonym",
+      "type": "event"
+    },
+    {
+      "anonymous": true,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "data",
+          "type": "string"
+        }
+      ],
+      "name": "logDataAnonymIndexed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "data",
+          "type": "string"
+        }
+      ],
+      "name": "logDataIndexed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        }
+      ],
+      "name": "logUnused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        }
+      ],
+      "name": "logUnusedIndexed",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_data",
+          "type": "string"
+        }
+      ],
+      "name": "log",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_data",
+          "type": "string"
+        }
+      ],
+      "name": "logIndexed",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_data",
+          "type": "string"
+        }
+      ],
+      "name": "Unused",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_data",
+          "type": "string"
+        }
+      ],
+      "name": "UnusedIndexed",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_data",
+          "type": "string"
+        }
+      ],
+      "name": "logAnonym",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_data",
+          "type": "string"
+        }
+      ],
+      "name": "logAnonymIndexed",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]
+}

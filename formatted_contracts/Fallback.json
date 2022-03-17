@@ -1,0 +1,68 @@
+{
+  "name": "Fallback",
+  "jsonPath": "/home/perikost/nodejs/exploringEthereum/local_blockchain/build/contracts/Fallback.json",
+  "contractAddress": "0x57F0B1883fE6Ac7DD41e6A7d600d770A924B31D2",
+  "fallback": true,
+  "functions": [],
+  "getters": [
+    {
+      "name": "counter",
+      "execute": true,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256"
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "logFallback",
+      "retrieve": false,
+      "toFind": null,
+      "paramType": "type of parameter to search",
+      "unused": false,
+      "fallback": false,
+      "index": {
+        "name": "name of parameter to search",
+        "value": null
+      }
+    }
+  ],
+  "indexedEvents": [],
+  "anonymousEvents": [],
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        }
+      ],
+      "name": "logFallback",
+      "type": "event"
+    },
+    {
+      "stateMutability": "nonpayable",
+      "type": "fallback"
+    },
+    {
+      "inputs": [],
+      "name": "counter",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    }
+  ]
+}
