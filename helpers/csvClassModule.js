@@ -178,7 +178,7 @@ function readLines (filePath){
     return csv;
 }
 
-function readCsvAsArray (filePath){
+function readCsvAsArray (filePath, start = 0){
     let outer = [];
     let csv = fs.readFileSync(filePath, 'utf8');
 
@@ -191,7 +191,8 @@ function readCsvAsArray (filePath){
 
         outer.push(line);
     }
-    return outer;
+    if(start) return outer.slice(start) 
+    else return outer;
 }
 
 

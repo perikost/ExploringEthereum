@@ -1,5 +1,7 @@
 const path = require('path');
 const fs = require('fs');
+const csv = require('./csvClassModule.js');
+const utils = require('./utils.js');
 
 module.exports = class TransactionDebugger {
 
@@ -38,7 +40,40 @@ module.exports = class TransactionDebugger {
         if(!fs.existsSync(folderPath)) fs.mkdirSync(folderPath, { recursive: true });
     
         let filePath = path.join(folderPath, `${fileName}.json`);
+        if(fs.existsSync(filePath)) await utils.sleep(1);  // TODO: This is a slopy fix. Improve
         fs.writeFileSync(filePath, JSON.stringify(info, null, 4));
+    }
+
+    async debugSavedTransactions(csvPath){
+        /* 
+        TODO: write a function that returns csv as:
+            [
+                { headers : values },
+                { headers : values },
+                ....
+            ]
+        and then use records = records.map(record => record.txHash)
+        */
+        let records = csv.readCsvAsArray(csvPath, 1)
+        let txHashes = records.map(record => record[0])
+        let folderPath = path.join(path.dirname(csvPath), path.parse(csvPath).name)
+
+        for(const txHash of txHashes) console.log(txHash, null, folderPath, Date().slice(0,24).replaceAll(' ', '_'))
+        // for(const txHash of txHashes) await this.debugSavedTransactions(txHash, null, folderPath, Date().slice(0,24).replaceAll(' ', '_'));
+    }
+
+    async debugAllSavedTransactions(rootFolder){
+        const items = fs.readdirSync(rootFolder);
+        for(var item of items){
+            let pathToItem = path.join(rootFolder, item);
+            if(fs.lstatSync(pathToItem).isDirectory()) {
+                await this.debugAllSavedTransactions(pathToItem);
+            }
+            else {
+                if(path.parse(pathToItem).ext !== '.csv') continue;
+                await this.debugSavedTransactions(pathToItem);
+            }
+        }
     }
 }
 
