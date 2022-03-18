@@ -172,8 +172,8 @@ async function send(input, account){
         let executionTime = (performance.now() - begin).toFixed(4);
 
         return {
-            executionTime : executionTime,
-            txReceipt : txReceipt
+            executionTime: executionTime,
+            txReceipt: txReceipt
         };
     }catch(err){
         console.log('Transaction not completed. Error: ', err);
@@ -220,7 +220,7 @@ async function executeFunction(name, {values = [],  keepStats = true} = {}){
             // class
             let folderPath = csvObject.writeStats(toWrite, 'blockchain', 'execute', name, formattedCon.name);
 
-            txDebugger.saveDebuggedTransaction(txHash, folderPath, Date().slice(0,24).replaceAll(' ', '_'));
+            await txDebugger.saveDebuggedTransaction(txHash, message, folderPath, Date().slice(0,24).replaceAll(' ', '_'));
             // normal
             // csv.write(toWrite, 'blockchain', 'execute', name, formattedCon.name);
         }
