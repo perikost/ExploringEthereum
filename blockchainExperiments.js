@@ -75,7 +75,7 @@ async function executeRest() {
 
 
 // run
-blockchain.loadBlockchain({provider: 'infura'});
+blockchain.loadBlockchain();
 (async () => {
     // await executeStorageContract();
     await executeRest();

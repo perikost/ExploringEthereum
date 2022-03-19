@@ -133,6 +133,19 @@ function chooseCsvFolder(rootFolder){
 }
 // IPFS & Swarm
 
+function _parseJsonl(filePath){
+    let content = fs.readFileSync(filePath, 'utf-8').split('\n');
+    let parsedContent = [];
+    content.forEach(line => {
+      try{
+        parsedContent.push(JSON.parse(line));
+      }catch{
+        //
+      }
+    });
+    return parsedContent;
+}
+
 module.exports = {
     sleep : _sleep,
     toHex : _toHex,
@@ -141,5 +154,6 @@ module.exports = {
     getRandomString : getRandom_string,
     getRandomUint : getRandom_uint,
     getRandomBytes : getRandom_bytes,
-    getIdentifiers : _getIdentifiers
+    getIdentifiers : _getIdentifiers,
+    parseJsonl: _parseJsonl
 };

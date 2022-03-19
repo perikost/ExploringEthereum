@@ -220,7 +220,8 @@ async function executeFunction(name, {values = [],  keepStats = true} = {}){
             // class
             let folderPath = csvObject.writeStats(toWrite, 'blockchain', 'execute', name, formattedCon.name);
 
-            await txDebugger.saveDebuggedTransaction(txHash, message, folderPath + `/${name}`, Date().slice(0,24).replaceAll(' ', '_'));
+            await txDebugger.debugTransaction(txHash);
+            await txDebugger.saveDebuggedTransaction(message, folderPath + `/${name}`, Date().slice(0,24).replaceAll(' ', '_'))
             // normal
             // csv.write(toWrite, 'blockchain', 'execute', name, formattedCon.name);
         }
