@@ -60,8 +60,8 @@ async function loopExecution({loops = 1,  executionType = 'functions', reset = f
 async function executeStorageContract() {
     contracts = utils.getContracts(['Storage']);
 
-    await loopExecution({executionType: 'functions', loops: 2});
-    await loopExecution({executionType: 'functions', reset: true});
+    // await loopExecution({executionType: 'functions', loops: 2});
+    // await loopExecution({executionType: 'functions', reset: true});
     await loopExecution({executionType: 'functions'});
 }
 
@@ -75,8 +75,8 @@ async function executeRest() {
 
 
 // run
-blockchain.loadBlockchain();
+blockchain.loadBlockchain({accessList: true});
 (async () => {
-    // await executeStorageContract();
-    await executeRest();
+    await executeStorageContract();
+    // await executeRest();
 })();

@@ -6,6 +6,7 @@ const utils = require('./utils.js');
 const performance = require('perf_hooks').performance;
 const ethereumTx = require('ethereumjs-tx').Transaction;
 const Web3 = require('web3');
+const { env, exit } = require('process');
 
 // general TODO:
 // 1) initiallize all csv objects outside the for loops of the functions and pass each
@@ -19,13 +20,14 @@ var web3;
 var con;
 var formattedCon;
 var signMethod;
-var fork; // TODO: pass this as a value in _loadBlockchain()
+var fork; 
 var csvObject;
 var txDebugger;
+var useAccessList;
 
 // TODO: maybe make capitalize the vars above to be able to tell them apart easily
 
-function _loadBlockchain({provider = 'localhost',  signMeth = 'web3', hardFork = 'london'} = {}){ 
+function _loadBlockchain({provider = 'localhost',  signMeth = 'web3', accessList= false, hardFork = 'london'} = {}){ 
     // TODO: improve
     if(provider != 'localhost') provider = `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`;
     else provider = 'http://localhost:8545'
@@ -35,6 +37,7 @@ function _loadBlockchain({provider = 'localhost',  signMeth = 'web3', hardFork =
     fork = hardFork;
     csvObject = new CSV();
     txDebugger = new TransactionDebugger(web3);
+    useAccessList = accessList;
     
     return web3;
 }
@@ -117,7 +120,7 @@ async function getGaspriceBasedOnHistory(){
 }
 
 // TODO: split in two: send, sign with web3, sign with ethereumjs
-async function send(input, account){
+async function send(input, account, accessList){
     try{
         let nodeVersion = await web3.eth.getNodeInfo();
         console.log('Node version:', nodeVersion);
@@ -135,6 +138,7 @@ async function send(input, account){
                  gasPrice : gasprice,
                  value: 0,
                  data: input,
+                 accessList: accessList,
                  chain: 'ropsten',
                  hardfork: fork
             };
@@ -167,6 +171,8 @@ async function send(input, account){
 
         console.log('Waiting for transaction to be mined...');
 
+        process.exit();
+
         let begin = performance.now();
         let txReceipt = await web3.eth.sendSignedTransaction(transaction);
         let executionTime = (performance.now() - begin).toFixed(4);
@@ -182,7 +188,7 @@ async function send(input, account){
 }
 
 
-async function executeFunction(name, {values = [],  keepStats = true} = {}){
+async function executeFunction(name, {values = [], keepStats = true} = {}){
     try{
         // if no values are given, get the harcoded values or generate random ones
         if(values.length == 0){
@@ -204,7 +210,9 @@ async function executeFunction(name, {values = [],  keepStats = true} = {}){
         }
         
         let message = con.methods[name].apply(null, values).encodeABI();
-        let result = await send(message);
+        let accessList = useAccessList ? await con.methods[name].apply(null, values).createAccessList({from: process.env.MY_ADDRESS}): null;
+        // Contract's address is included even though it is not used in any EXT* operation, resulting in 2400 extra
+        let result = await send(message, null, accessList.accessList);
         
         if(keepStats){
             let executionTime = result.executionTime;
@@ -221,7 +229,7 @@ async function executeFunction(name, {values = [],  keepStats = true} = {}){
             let folderPath = csvObject.writeStats(toWrite, 'blockchain', 'execute', name, formattedCon.name);
 
             await txDebugger.debugTransaction(txHash);
-            await txDebugger.saveDebuggedTransaction(message, folderPath + `/${name}`, Date().slice(0,24).replaceAll(' ', '_'))
+            await txDebugger.saveDebuggedTransaction(message, accessList.accessList, folderPath + `/${name}`, Date().slice(0,24).replaceAll(' ', '_'))
             // normal
             // csv.write(toWrite, 'blockchain', 'execute', name, formattedCon.name);
         }
@@ -240,7 +248,7 @@ async function _executeFunctions(values = [], keepStats = true){
         if(!func.execute) continue; // don't execute the function
 
         let name = func.name;
-        await executeFunction(name, {values : values, keepStats : keepStats});
+        await executeFunction(name, {values: values, keepStats: keepStats});
     }
 }
 

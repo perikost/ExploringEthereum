@@ -33,7 +33,7 @@ module.exports = class TransactionDebugger {
         });
     }
 
-    async saveDebuggedTransaction(txData, folderPath, fileName){
+    async saveDebuggedTransaction(txData, accessList, folderPath, fileName){
         let steps = this.debuggedTx.structLogs;
         steps.map((step, index) => step.step = index);
         let txDataInfo = txData ?  processTxData(txData): 'not provided';
@@ -46,6 +46,7 @@ module.exports = class TransactionDebugger {
             opcodesStartGas: steps && steps.length ? steps[0].gas: 0,
             opcodesRemainingGas: steps && steps.length? steps[steps.length - 1].gas: 0,
             gasUsed: this.debuggedTx.gas? this.debuggedTx.gas : BASE_FEE + opcodesGas + (txDataInfo.gas? txDataInfo.gas : 0),
+            accessList: accessList? accessList : null,
             steps: steps
         }
         
@@ -84,7 +85,7 @@ module.exports = class TransactionDebugger {
                 this.debuggedTx.structLogs = trace.slice(0, -1);
                 this.debuggedTx.gas = null;
                 
-                await this.saveDebuggedTransaction(transaction.input, folderPath, fileName)
+                await this.saveDebuggedTransaction(transaction.input, null, folderPath, fileName)
                 fs.unlinkSync(path.join('/tmp', file));
             }
         }

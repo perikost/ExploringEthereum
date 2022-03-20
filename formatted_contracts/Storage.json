@@ -1,7 +1,7 @@
 {
   "name": "Storage",
   "jsonPath": "/home/perikost/nodejs/exploringEthereum/local_blockchain/build/contracts/Storage.json",
-  "contractAddress": "0xbbEd3cBAA44bfc4b4e481EA489875d3f87E04e89",
+  "contractAddress": "0x1Cbf00284FF45B41446900b8F9c7Ab28D191d473",
   "fallback": false,
   "functions": [
     {
