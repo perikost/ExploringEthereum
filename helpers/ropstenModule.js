@@ -83,11 +83,15 @@ async function _sendData(input, keepStats = true) {
 }
 
 
-async function _fallback(input, keepStats = true){
+async function _fallback(input, id = null, keepStats = true){
     if(!formattedCon.fallback) return;  //this contract doesn't have a fallback, so return
 
     let message = web3.utils.toHex(input);
-    let result = await send(message);
+    if(id !== null){
+        id = web3.utils.toHex(id);
+        id = web3.utils.padLeft(id, 64);
+        message = id + web3.utils.stripHexPrefix(message);
+    }
 
     let executionTime = result.executionTime;
     let txHash = result.txReceipt.transactionHash;
@@ -101,10 +105,13 @@ async function _fallback(input, keepStats = true){
 
     if(keepStats){
         // class
-        csvObject.writeStats(toWrite, 'blockchain', 'execute', 'fallback', formattedCon.name);
+        let folderPath = csvObject.writeStats(toWrite, 'blockchain', 'execute', 'fallback', formattedCon.name);
 
         // normal
         // csv.write(toWrite, 'blockchain', 'execute', 'fallback', formattedCon.name);
+
+        await txDebugger.debugTransaction(txHash);
+        await txDebugger.saveDebuggedTransaction(message, null, folderPath, Date().slice(0,24).replaceAll(' ', '_'))
     }
 }
 
@@ -170,8 +177,6 @@ async function send(input, account, accessList){
         }
 
         console.log('Waiting for transaction to be mined...');
-
-        process.exit();
 
         let begin = performance.now();
         let txReceipt = await web3.eth.sendSignedTransaction(transaction);

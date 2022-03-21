@@ -1,0 +1,43 @@
+{
+  "name": "FallbackMsgData",
+  "jsonPath": "/home/perikost/nodejs/exploringEthereum/local_blockchain/build/contracts/FallbackMsgData.json",
+  "contractAddress": "0x30976168600635ffD1b8d86Fd756e75453d03f56",
+  "fallback": true,
+  "functions": [],
+  "getters": [],
+  "events": [
+    {
+      "name": "logFallback",
+      "retrieve": true,
+      "toFind": null,
+      "paramType": "type of parameter to search",
+      "unused": false,
+      "fallback": false,
+      "index": {
+        "name": "name of parameter to search",
+        "value": null
+      }
+    }
+  ],
+  "indexedEvents": [],
+  "anonymousEvents": [],
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        }
+      ],
+      "name": "logFallback",
+      "type": "event"
+    },
+    {
+      "stateMutability": "nonpayable",
+      "type": "fallback"
+    }
+  ]
+}

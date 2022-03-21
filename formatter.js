@@ -8,11 +8,11 @@ var contractsPath;
 
 program
     .description('A util to format compiled contracts') 
-    .option('-p, --path <string>', 'path to compiled contracts');
+    .option('-p, --path <string>', 'path to compiled contracts')
+    .option('-c, --contracts <string>', 'contracts to load separated with , (e.g., \'Contract1, Contract2...\' )');
 program.parse();
 
 const options = program.opts();
-
 
 function formatContract(con){
     let formattedCon = {};
@@ -114,9 +114,12 @@ function formatContract(con){
     return formattedCon;
 }
 
-function getJsonFiles(){
+function getJsonFiles(chosenJsons){
+    chosenJsons = chosenJsons.replaceAll(' ', '').split(',');
+
     let files = fs.readdirSync(contractsPath).filter(file => {
-        return file.includes('.json');
+        if (chosenJsons && chosenJsons.length > 0) return chosenJsons.includes(path.parse(file).name);
+        else return file.includes('.json');
     })
 
     assert(files.length > 0, `No JSON files in ${contractsPath} to format`);
@@ -136,7 +139,7 @@ function getJsonFiles(){
         fs.mkdirSync(formattedContractsPath);
     }
 
-    let files = getJsonFiles();
+    let files = getJsonFiles(options.contracts);
     files.forEach(file => {
         let con = fs.readFileSync(path.join(contractsPath, file), 'utf8');
         let formattedCon = formatContract(JSON.parse(con));

@@ -47,6 +47,7 @@ async function loopExecution({loops = 1,  executionType = 'functions', reset = f
                 for (var i = 0; i < loops; i++) {
 
                     if(executionType == 'fallback') await blockchain.fallback(value);
+                    if(executionType == 'fallbackMsgData') await blockchain.fallback(value, index);
                     if(executionType == 'functions'){
                         if(con.name == 'Events') await execute([startingID + index, value], reset);
                         else await execute([value], reset);
@@ -66,17 +67,18 @@ async function executeStorageContract() {
 }
 
 async function executeRest() {
-    contracts = utils.getContracts(['Events', 'Fallback', 'FallbackIndexed']);
+    contracts = utils.getContracts(['FallbackMsgData']);
 
     // await loopExecution({executionType: 'functions', startingID: 0});
-    await loopExecution({executionType: 'send_data'});  
+    // await loopExecution({executionType: 'send_data'});  
     // await loopExecution({executionType: 'fallback'});
+    await loopExecution({executionType: 'fallbackMsgData'});
 }
 
 
 // run
 blockchain.loadBlockchain({accessList: true});
 (async () => {
-    await executeStorageContract();
-    // await executeRest();
+    // await executeStorageContract();
+    await executeRest();
 })();
