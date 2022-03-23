@@ -7,7 +7,7 @@
   "getters": [
     {
       "name": "counter",
-      "execute": true,
+      "execute": false,
       "inputs": [],
       "outputs": [
         {
@@ -19,13 +19,13 @@
   "events": [
     {
       "name": "logFallback",
-      "retrieve": false,
-      "toFind": null,
-      "paramType": "type of parameter to search",
+      "retrieve": true,
+      "toFind": "data",
+      "paramType": "string",
       "unused": false,
-      "fallback": false,
+      "fallback": true,
       "index": {
-        "name": "name of parameter to search",
+        "name": "id",
         "value": null
       }
     }

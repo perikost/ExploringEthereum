@@ -93,6 +93,8 @@ async function _fallback(input, id = null, keepStats = true){
         message = id + web3.utils.stripHexPrefix(message);
     }
 
+    let result = await send(message);
+    
     let executionTime = result.executionTime;
     let txHash = result.txReceipt.transactionHash;
     let cost = result.txReceipt.gasUsed;
@@ -277,13 +279,12 @@ async function executeGetter(name, {values = [],  keepStats = true} = {}){
 
         let begin = performance.now();
         let result = await con.methods[name].apply(null, values).call();
-        let executionTime = (performance.now() - begin).toFixed(4);
+        let retrievalTime = (performance.now() - begin).toFixed(4);
 
         if(keepStats){
-            let info = type(result);
             let toWrite = {
-                basic: [txHash, Date().slice(0,24), cost, executionTime],
-                inputInfo: info
+                basic: [Date().slice(0,24), retrievalTime],
+                inputInfo: type(result)
             };
 
             //class
@@ -335,9 +336,12 @@ async function _retrieveEvents(keepStats = true){
             let results = await con.getPastEvents(name,{
                 fromBlock : 0
             });
+            let allEventsRetrieval = (performance.now() - begin).toFixed(4);
 
+            begin = performance.now();
             for(let i=0; i<results.length; i++){
                 if(results[i].returnValues[indexName] == indexValue){
+                    var findSpecificEvent = (performance.now() - begin).toFixed(4);
 
                     var decodingTime = 0;
                     if(eve.unused == true){
@@ -346,9 +350,9 @@ async function _retrieveEvents(keepStats = true){
                         decodingTime = (performance.now() - beginDecoding).toFixed(4);
                     }
                     else if(eve.fallback == true){
-                        let beginDecoding = performance.now();
                         var result = await retrieveTxData(results[i].transactionHash);
-                        decodingTime = (performance.now() - beginDecoding).toFixed(4);
+                        decodingTime = result.retrievalTime
+                        result = result.decodedInput
                     }
                     else {
                         var result = results[i].returnValues[toFind];
@@ -356,18 +360,15 @@ async function _retrieveEvents(keepStats = true){
                     break;
                 }
             }
-            // TODO: this timer should stop before the for-loop. Make another for measuring the time to match the event
-            let executionTime = (performance.now() - begin).toFixed(4);
 
             if(keepStats){
                 if(!result) continue;
-                let info = type(result);
-                let totalTime = Number(executionTime) + Number(decodingTime);
+                var totalTime = Number(allEventsRetrieval) + Number(findSpecificEvent) + Number(decodingTime);
                 let id = ',';
                 if(indexName == 'id') id = indexValue;
                 let toWrite = {
-                    basic: [Date().slice(0,24),id, results.length, executionTime, decodingTime, totalTime],
-                    inputInfo: info
+                    basic: [Date().slice(0,24), results.length, id, allEventsRetrieval, findSpecificEvent, decodingTime, totalTime],
+                    inputInfo: type(result)
                 };
 
                 //class
@@ -378,10 +379,10 @@ async function _retrieveEvents(keepStats = true){
             }
 
 
-            console.log(`Retrieval time (events) |${eve.name}|: `, executionTime, 'Result: ',result.length);
-            console.log(result);
+            console.log(`Retrieval time (events) |${eve.name}|: `, totalTime, 'Result: ',result.length);
+            console.log(result.length > 10? result.substring(0,10) : result);
 
-            await utils.sleep(3);
+            await utils.sleep(2);
         }catch(error){
             console.log(error);
             process.exit();
@@ -407,13 +408,14 @@ async function _retrieveIndexedEvents(keepStats = true){
             filter[indexName] = indexValue; // modify object to { indexed_parameter_name : expected_value }
 
             let begin = performance.now();
-            let result = await con.getPastEvents(name,{
+            let results = await con.getPastEvents(name,{
                 filter : filter,
                 fromBlock : 0
             });
-            let executionTime = (performance.now() - begin).toFixed(4);
+            let retrievalTime = (performance.now() - begin).toFixed(4);
 
-            result = result[0];
+            let result = results[0];
+            let numOfLogs = results.length;
 
             let decodingTime = 0;
             if(eve.unused == true){
@@ -422,9 +424,9 @@ async function _retrieveIndexedEvents(keepStats = true){
                 decodingTime = (performance.now() - beginDecoding).toFixed(4);
             }
             else if(eve.fallback == true){
-                let beginDecoding = performance.now();
                 result = await retrieveTxData(result.transactionHash);
-                decodingTime = (performance.now() - beginDecoding).toFixed(4);
+                decodingTime = result.retrievalTime
+                result = result.decodedInput
             }else {
                 result  = result.returnValues[eve.toFind];
             }
@@ -432,14 +434,13 @@ async function _retrieveIndexedEvents(keepStats = true){
 
             if(keepStats){
                 if(!result) continue;
-                let info = type(result);
-                let totalTime = Number(executionTime) + Number(decodingTime);
+                var totalTime = Number(retrievalTime) + Number(decodingTime);
                 let id = ',';
                 if(indexName == 'id') id = indexValue;
 
                 let toWrite = {
-                    basic: [Date().slice(0,24),id, executionTime, decodingTime, totalTime],
-                    inputInfo: info
+                    basic: [Date().slice(0,24), numOfLogs, id, retrievalTime, decodingTime, totalTime],
+                    inputInfo: type(result)
                 };
                 //class
                 csvObject.writeStats(toWrite, 'blockchain', 'retrieve_Indexed_Events', name, formattedCon.name);
@@ -449,10 +450,10 @@ async function _retrieveIndexedEvents(keepStats = true){
             }
 
 
-            console.log(`Retrieval time (events) |${eve.name}|: `, executionTime, 'Result: ',result.length);
-            console.log(result);
+            console.log(`Retrieval time (events) |${eve.name}|: `, totalTime, 'Result: ',result.length);
+            console.log(result.length > 10? result.substring(0,10) : result);
 
-            await utils.sleep(3);
+            await utils.sleep(2);
         }catch(error){
             console.log(error);
             process.exit();
@@ -468,47 +469,85 @@ async function _retrieveAnonymousEvents(keepStats = true) {
         if(!eve.retrieve) continue; // don't retrieve the Event
 
         try {
+            let numOfLogs;
             let name = eve.name;
             let toFind = eve.toFind;
             let paramType = eve.paramType;
             let indexName = eve.index.name;
             let indexValue = eve.index.value;
-            let topic = web3.eth.abi.encodeParameter('uint256', indexValue); // parameter should be abiEncoded
+            let topic = eve.indexed ? web3.eth.abi.encodeParameter('uint256', indexValue): null; // parameter should be abiEncoded
             /*
             if topics : [null, indexValue]  it will match every event whose second topic = indexValue.
             Generally, getPastLogs finds logs based on specific topic values. The order of the topics is important
             and should use null for every one you don't want to match. In this case the event we are searching for
             is anonymous, so the event signature is not used as the first topic. That's why we don't use null
             */
-            let begin = performance.now();
-            let log = await web3.eth.getPastLogs({
-                fromBlock : 0,
-                address : formattedCon.contractAddress,
-                topics : [topic]
-            });
-            let retrievalTime = (performance.now() - begin).toFixed(4);
 
-            let data = log[0].data
+            // temporary fix to record both non-indexed and indexed anonymous events retrieval time
+            if(eve.indexed){
+                let begin = performance.now();
+                let logs = await web3.eth.getPastLogs({
+                    fromBlock : 0,
+                    address : formattedCon.contractAddress,
+                    topics : [topic]
+                });
+                var retrievalTime = (performance.now() - begin).toFixed(4);
 
-            let beginDecoding = performance.now();
-            let result = await web3.eth.abi.decodeLog([{
-                type : paramType,
-                name : toFind
-            }], data);
-            let decodingTime = (performance.now() - beginDecoding).toFixed(4); 
+                let data = logs[0].data
+                numOfLogs = logs.length;
 
+                let beginDecoding = performance.now();
+                var result = await web3.eth.abi.decodeLog([{
+                    type : paramType,
+                    name : toFind
+                }], data);
+                var decodingTime = (performance.now() - beginDecoding).toFixed(4); 
+            } 
+            
+            if(!eve.indexed){
+                let begin = performance.now();
+                let logs = await web3.eth.getPastLogs({
+                    fromBlock : 0,
+                    address : formattedCon.contractAddress
+                });
+                var retrievalTime = (performance.now() - begin).toFixed(4);
+
+                numOfLogs = logs.length;
+
+                let beginDecoding = performance.now();
+                for(let i = 0; i < logs.length; i++){
+                    
+                    if(logs[i].topics.length !== 0) continue;  // an anonymous non-indexed event has no topics at all
+                    
+                    let data = logs[i].data
+                    var result = await web3.eth.abi.decodeLog([
+                        {
+                            type : 'uint256',
+                            name : indexName
+                        },
+                        {
+                            type : paramType,
+                            name : toFind
+                        }
+                    ], data);
+
+                    if(result[indexName] == indexValue){
+                        var decodingTime = (performance.now() - beginDecoding).toFixed(4);
+                        break;
+                    }
+                }
+            } 
             result = result[toFind]; // neeeded because the output of decodeLog is something like : Result { '0': 's', __length__: 1, data: 's' }
 
             if(keepStats){
                 if(!result) continue;
-                let info = type(result);
-                let totalTime = Number(retrievalTime) + Number(decodingTime);
+                var totalTime = Number(retrievalTime) + Number(decodingTime);
                 let id = ',';
                 if(indexName == 'id') id = indexValue;
 
                 let toWrite = {
-                    basic: [Date().slice(0,24),id, retrievalTime, decodingTime, totalTime],
-                    inputInfo: info
+                    basic: [Date().slice(0,24), numOfLogs || 0, id, retrievalTime, decodingTime, totalTime],
+                    inputInfo: type(result)
                 };
                 //class
                 csvObject.writeStats(toWrite, 'blockchain', 'retrieve_Anonymous_Events', name, formattedCon.name);
@@ -518,10 +557,10 @@ async function _retrieveAnonymousEvents(keepStats = true) {
             }
 
 
-            console.log(`Retrieval time (anonymous) |${eve.name}|: `, retrievalTime, 'Result: ',result.length);
-            console.log(result);
+            console.log(`Retrieval time (anonymous) |${eve.name}|: `, totalTime, 'Result: ',result.length);
+            console.log(result.length > 10? result.substring(0,10) : result);
 
-            await utils.sleep(3);
+            await utils.sleep(2);
         } catch (e) {
             console.log(e);
         }
@@ -544,10 +583,9 @@ async function _retrievePlainTransactionData(path, keepStats = true) {
             let result = await retrieveTxData(txHash);
             // let retrievalTime = (performance.now() - begin).toFixed(4);
 
-            let info = type(result.decodedInput);
             let toWrite = {
-                basic: [Date().slice(0,24),id, result.retrievalTime],
-                inputInfo: info
+                basic: [Date().slice(0,24), result.retrievalTime],
+                inputInfo: type(result.decodedInput)
             };
     
 
@@ -560,7 +598,8 @@ async function _retrievePlainTransactionData(path, keepStats = true) {
                 // csv.write(toWrite, 'blockchain', 'retrieve_txData', name);
             }
             console.log(`Retrieval time (txData) : `, result.retrievalTime, 'Result: ', result.decodedInput.length);
-            await utils.sleep(1);
+            console.log(result.decodedInput.length > 10? result.decodedInput.substring(0,10) : result.decodedInput);
+            await utils.sleep(2);
         } catch (e) {
             console.log(e);
             process.exit();
@@ -583,15 +622,23 @@ async function retrieveTxData(txHash) {
     };
 }
 
-// FIXME: must change cause now we have 2 parameters not one
+// TODO: works only for our test cases. Improve it
 async function retrieveUnused(txHash, type) {
     // TODO: measure time as in retrieveTxData
     let tx = await web3.eth.getTransaction(txHash);
     let txData = tx.input;
-    let param = '0x' + txData.slice(10);
-    let result = web3.eth.abi.decodeParameter(type, param);
+    // let param = '0x' + txData.slice(10);
+    // let result = web3.eth.abi.decodeParameter(type, param);
 
-    return result;
+    let result = web3.eth.abi.decodeParameters([{
+        type : 'uint256',
+        name : '_id'
+    },{
+        type: type,
+        name: '_data'
+    }], txData.slice(10));
+
+    return result['_data'];
 }
 
 

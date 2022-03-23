@@ -10,11 +10,11 @@
       "name": "logFallback",
       "retrieve": true,
       "toFind": null,
-      "paramType": "type of parameter to search",
+      "paramType": "string",
       "unused": false,
-      "fallback": false,
+      "fallback": true,
       "index": {
-        "name": "name of parameter to search",
+        "name": "id",
         "value": null
       }
     }

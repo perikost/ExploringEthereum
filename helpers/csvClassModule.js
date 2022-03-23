@@ -3,8 +3,8 @@ const path = require('path');
 const assert = require('assert');
 const utils = require('./utils.js');
 const prompt = require('prompt-sync')({sigint: true});
-const eventHeaders = ['Date','Total Events','ID' , 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)'];
-const indexedEventHeaders = ['Date','ID' , 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)'];
+const eventHeaders = ['Date','Total Events','ID' , 'Retrieval Time All (ms)', 'Retrieval Time Specific (ms)', 'Decoding Time (ms)', 'Total Time (ms)'];
+const indexedEventHeaders = ['Date', 'Total Events', 'ID' , 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)'];
 const storageHeaders = ['Date','Retrieval Time (ms)'];
 const executeHeaders = ['Transaction Hash', 'Date', 'Cost (gas)', 'Execution Time (ms)'];
 
@@ -14,7 +14,7 @@ const HEADERS = {
         retrieveStorage : storageHeaders,
         retrieve_Events : eventHeaders,
         retrieve_Indexed_Events : indexedEventHeaders,
-        retrieve_Anonymous_Events : ['Date','ID' , 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)'],
+        retrieve_Anonymous_Events : ['Date', 'Total Events', 'ID' , 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)'],
         retrieve_txData : ['Date' , 'Retrieval Time (ms)']
     },
     ipfs:{
