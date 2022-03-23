@@ -405,7 +405,7 @@ async function _retrieveIndexedEvents(keepStats = true){
             let indexValue = eve.index.value;
 
             let filter = new Object(); // create the object needed for getPastEvents filter property
-            filter[indexName] = indexValue; // modify object to { indexed_parameter_name : expected_value }
+            filter[indexName] = [indexValue]; // modify object to { indexed_parameter_name : expected_value }
 
             let begin = performance.now();
             let results = await con.getPastEvents(name,{
