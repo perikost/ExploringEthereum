@@ -24,6 +24,8 @@ var fork;
 var csvObject;
 var txDebugger;
 var useAccessList;
+var errors = 0;
+var fromContractCreation;
 
 // TODO: maybe make capitalize the vars above to be able to tell them apart easily
 
@@ -43,7 +45,7 @@ function _loadBlockchain({provider = 'localhost',  signMeth = 'web3', accessList
 }
 
 
-function _config(contract, signMeth = 'web3'){  
+function _config(contract, signMeth = 'web3', fromConCreation = false){  
     // signMethod can be 1) 'web3' -> to sign using Web3
     //  2) anything else ->  to sign using ethereumjs-tx
 
@@ -51,6 +53,7 @@ function _config(contract, signMeth = 'web3'){
         formattedCon = contract;
         signMethod = signMeth;
         con = new web3.eth.Contract(formattedCon.abi, formattedCon.contractAddress);
+        fromContractCreation = fromConCreation;
     } 
 
     web3.eth.transactionPollingTimeout = 3600*2; //set waiting time for a transaction to be mined to 2 hours
@@ -296,8 +299,9 @@ async function executeGetter(name, {values = [],  keepStats = true} = {}){
         return result;
 
     }catch(error){
+        errors++;
         console.log(error);
-        process.exit();
+        console.log(errors);
     }
 }
 
@@ -334,7 +338,7 @@ async function _retrieveEvents(keepStats = true){
 
             let begin = performance.now();
             let results = await con.getPastEvents(name,{
-                fromBlock : 0
+                fromBlock: fromContractCreation ? formattedCon.blockNumber : 0
             });
             let allEventsRetrieval = (performance.now() - begin).toFixed(4);
 
@@ -410,7 +414,7 @@ async function _retrieveIndexedEvents(keepStats = true){
             let begin = performance.now();
             let results = await con.getPastEvents(name,{
                 filter : filter,
-                fromBlock : 0
+                fromBlock: fromContractCreation ? formattedCon.blockNumber : 0
             });
             let retrievalTime = (performance.now() - begin).toFixed(4);
 
@@ -455,8 +459,9 @@ async function _retrieveIndexedEvents(keepStats = true){
 
             await utils.sleep(2);
         }catch(error){
+            errors++;
             console.log(error);
-            process.exit();
+            console.log(errors);
         }
     }
 }
@@ -487,7 +492,7 @@ async function _retrieveAnonymousEvents(keepStats = true) {
             if(eve.indexed){
                 let begin = performance.now();
                 let logs = await web3.eth.getPastLogs({
-                    fromBlock : 0,
+                    fromBlock: fromContractCreation ? formattedCon.blockNumber : 0,
                     address : formattedCon.contractAddress,
                     topics : [topic]
                 });
@@ -507,7 +512,7 @@ async function _retrieveAnonymousEvents(keepStats = true) {
             if(!eve.indexed){
                 let begin = performance.now();
                 let logs = await web3.eth.getPastLogs({
-                    fromBlock : 0,
+                    fromBlock: fromContractCreation ? formattedCon.blockNumber : 0,
                     address : formattedCon.contractAddress
                 });
                 var retrievalTime = (performance.now() - begin).toFixed(4);
@@ -561,8 +566,10 @@ async function _retrieveAnonymousEvents(keepStats = true) {
             console.log(result.length > 10? result.substring(0,10) : result);
 
             await utils.sleep(2);
-        } catch (e) {
-            console.log(e);
+        } catch (error) {
+            errors++;
+            console.log(error);
+            console.log(errors);
         }
     }
 }
@@ -600,9 +607,10 @@ async function _retrievePlainTransactionData(path, keepStats = true) {
             console.log(`Retrieval time (txData) : `, result.retrievalTime, 'Result: ', result.decodedInput.length);
             console.log(result.decodedInput.length > 10? result.decodedInput.substring(0,10) : result.decodedInput);
             await utils.sleep(2);
-        } catch (e) {
-            console.log(e);
-            process.exit();
+        } catch (error) {
+            errors++;
+            console.log(error);
+            console.log(errors);
         }
 
     }

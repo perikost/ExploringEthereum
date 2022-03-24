@@ -3,6 +3,7 @@
   "jsonPath": "/home/perikost/nodejs/exploringEthereum/local_blockchain/build/contracts/FallbackMsgData.json",
   "contractAddress": "0x30976168600635ffD1b8d86Fd756e75453d03f56",
   "fallback": true,
+  "blockNumber": 12115420,
   "functions": [],
   "getters": [],
   "events": [

@@ -3,6 +3,7 @@
   "jsonPath": "/home/perikost/nodejs/exploringEthereum/local_blockchain/build/contracts/Events.json",
   "contractAddress": "0x7911881dB914d635a917e12EeC6eE925c772bF89",
   "fallback": false,
+  "blockNumber": 12090106,
   "functions": [
     {
       "name": "log",
