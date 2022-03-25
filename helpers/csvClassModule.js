@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
 const utils = require('./utils.js');
+const { exit } = require('process');
 const prompt = require('prompt-sync')({sigint: true});
 const eventHeaders = ['Date','Total Events','ID' , 'Retrieval Time All (ms)', 'Retrieval Time Specific (ms)', 'Decoding Time (ms)', 'Total Time (ms)'];
 const indexedEventHeaders = ['Date', 'Total Events', 'ID' , 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)'];
@@ -197,50 +198,68 @@ function readCsvAsArray (filePath, start = 0){
 
 
 function average(csv, filePath) {
-    let avrg = Object();
+    let avrg = {};
     let headers = csv[0];
     csv = csv.slice(1);
 
-    for (var i = 0; i < headers.length; i++) {
-        header = headers[i];
+    headers.map((header, index) => {
+        if(header.toLowerCase().includes('time')) {
+            avrg[header] = {};
+            avrg[header]['index'] = index;
+        }
+    })
 
-        if(header.includes('Retrieval') || header.includes('Decoding') || header.includes('Total Time') || header.includes('Upload') ){
-            avrg[header] = Object();
-            avrg[header]['sum'] = 0;
-            avrg[header]['index'] = i;
+    let sizeIndex = headers.findIndex(header => header.toLowerCase().includes('size'))
+
+    for(const line of csv){
+        let size = line[sizeIndex]
+        for(const value of Object.values(avrg)){
+            if(!value[size]){
+                value[size] = {
+                    sum: 0,
+                    count: 0
+                }   
+            }
+
+            value[size].sum += Number(line[value.index]);
+            value[size].count++;
         }
     }
 
-    for(var line of csv){
-        for(var key of Object.keys(avrg)){
-            avrg[key].sum = Number(avrg[key].sum) + Number(line[avrg[key].index]);
+    for(const value of Object.values(avrg)){
+        delete value.index;
+        let totalSum = 0;
+        let totalCount = 0; 
+        for(const subValue of Object.values(value)){
+            totalSum += subValue.sum;
+            totalCount += subValue.count; 
+
+            subValue.average = subValue.sum / subValue.count;
         }
+        value.average = totalSum / totalCount;
     }
 
-    let splitPath = filePath.split('/');
-    let csvName = splitPath[splitPath.length - 1];
-    fs.appendFileSync('C:/Users/perik/Desktop/For Paper/all.csv', '\n' + csvName + '\n');
+    let jsonName = path.parse(filePath).name + '_average.json';
+    let jsonPath = path.join(path.dirname(filePath), jsonName);
 
-    for(var key of Object.keys(avrg)){
-        avrg[key].sum /= csv.length;
-        let toWrite = [key, avrg[key].sum]
+    fs.writeFileSync(jsonPath, JSON.stringify(avrg, null, 4))
 
-        fs.appendFileSync(filePath, toWrite + '\n');
-        fs.appendFileSync('C:/Users/perik/Desktop/For Paper/all.csv', toWrite.toString() + '\n');
-    }
+    // append column average to the csv
+    let toWrite = headers.map(header => avrg[header] ? avrg[header].average : '');
+    fs.appendFileSync(filePath, toWrite.toString() + '\n');
 }
 
 
 function _average(filePath){
     const items = fs.readdirSync(filePath);
 
-    for(var item of items){
-        pathToItem = filePath + '/' + item;
+    for(const item of items){
+        pathToItem = path.join(filePath, item);
         if(fs.lstatSync(pathToItem).isDirectory()) {
-            console.log(item, "directory");
             _average(pathToItem);
         }
         else {
+            if(path.parse(pathToItem).ext !== '.csv') continue;
             let csv = readCsvAsArray(pathToItem);
             average(csv, pathToItem);
         }

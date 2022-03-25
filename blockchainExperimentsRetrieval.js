@@ -1,5 +1,6 @@
 const blockchain = require('./helpers/ropstenModule.js');
 const utils = require('./helpers/utils.js');
+const csv = require('./helpers/csvClassModule')
 
 var contracts = [];
 
@@ -21,7 +22,7 @@ async function retrieveEvents(con, ids){
 
 
 async function loopRetrieval(options){
-    contracts = utils.getContracts(['Fallback','FallbackIndexed','FallbackMsgData', 'Storage', 'Events']);
+    contracts = utils.getContracts(['Fallback','FallbackIndexed','FallbackMsgData', 'Storage']);
     let ids = [];
     for (let i = 0; i < options.idsCounter; i++) {
        ids.push(i);
@@ -39,10 +40,14 @@ async function loopRetrieval(options){
 }
 
 
-// run
-blockchain.loadBlockchain({provider:'infura'});
-loopRetrieval({
-    times : 1,
-    idsCounter : 15,
-    retrieveTxData : true,
-});
+// uncomment to run the experiments
+// blockchain.loadBlockchain();
+// loopRetrieval({
+//     times : 1,
+//     idsCounter : 2,
+//     retrieveTxData : true,
+// });
+
+// uncomment to compute average retrieval latency of a folder's csv records
+csv.average('csv_records/24-03-2022/Contracts')
+
