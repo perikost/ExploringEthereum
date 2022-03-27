@@ -54,11 +54,13 @@ async function _uploadText(data, {wrapWithDirectory = false, keepStats = true} =
         //const cid = await ipfs.object.put(obj)
         //UPLOAD AS OBJECT
 
-        console.log('uploaded text');
-        let date = Date().slice(0,24);
-        let toWrite = [date, uploaded.cid, uploaded.size, data.length, uploadTime];
+        let info = utils.type(data);
+        let toWrite = {
+            basic: [Date().slice(0,24), uploaded.cid, uploadTime, uploaded.size],
+            inputInfo: info
+        };
 
-        if(keepStats) csvObject.writeStats(toWrite, 'ipfs', 'upload', `string_${data.length}`);
+        if(keepStats) csvObject.writeStats(toWrite, 'ipfs', 'upload', `string_${data.length / 1024}kB`);
 
         await utils.sleep(1);
         return uploaded.cid;
@@ -66,6 +68,15 @@ async function _uploadText(data, {wrapWithDirectory = false, keepStats = true} =
         console.log(err);
         process.exit();
     }
+}
+
+async function getLocalCids(){
+    let cids = [];
+    for await (const { cid, type } of ipfs.pin.ls()) {
+        cids.push(cid.toString());
+    }
+    
+    return cids;
 }
 
 async function retrieveText(cid, keepStats = true){
@@ -77,21 +88,31 @@ async function retrieveText(cid, keepStats = true){
         let executionTime = (performance.now() - begin).toFixed(4);
 
         let objectStats = await ipfs.object.stat(cid);
-        let data = chunks.toString();
-        let toWrite = [Date().slice(0,24), objectStats.CumulativeSize, data.length, executionTime];
-        
-        if(keepStats) csvObject.writeStats(toWrite, 'ipfs', 'retrieve', `string_${data.length}.csv`);
+        // TODO: find out why commas are inserted
+        let data = chunks.toString().replaceAll(',', '');
 
-        console.log(data);
+        let info = utils.type(data);
+        let toWrite = {
+            basic: [Date().slice(0,24), executionTime, objectStats.CumulativeSize],
+            inputInfo: info
+        };
+        
+        if(keepStats) csvObject.writeStats(toWrite, 'ipfs', 'retrieve', `string_${data.length / 1024}kB`);
+
+        console.log(data.substring(0,10));
         await utils.sleep(1);
     }catch(err){
         console.log(err);
-        process.exit();
+        // process.exit();
     }
 }
 
 async function _retrieveAllTexts(cids, keepStats = true){
-    for(const cid of cids) await retrieveText(cid, keepStats);
+    let localCids = await getLocalCids();
+    console.log(localCids);
+    for(const cid of cids){
+        if(localCids.includes(cid)) await retrieveText(cid, keepStats);
+    }
 }
 
 
@@ -101,8 +122,8 @@ async function _clearRepo(){
         for await (const res of ipfs.repo.gc());
         let stats = await ipfs.repo.stat({human : true});
         console.log(stats);
-    }catch{
-        console.log(error);
+    }catch(err){
+        console.log(err);
         process.exit();
     }
 }

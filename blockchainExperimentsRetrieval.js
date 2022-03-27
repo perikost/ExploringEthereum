@@ -49,5 +49,5 @@ async function loopRetrieval(options){
 // });
 
 // uncomment to compute average retrieval latency of a folder's csv records
-csv.average('csv_records/24-03-2022/Contracts')
+// csv.average('csv_records/24-03-2022/Contracts')
 

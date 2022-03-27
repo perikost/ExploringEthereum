@@ -133,6 +133,8 @@ function chooseCsvFolder(rootFolder){
 }
 // IPFS & Swarm
 
+
+// General
 function _parseJsonl(filePath){
     let content = fs.readFileSync(filePath, 'utf-8').split('\n');
     let parsedContent = [];
@@ -146,6 +148,24 @@ function _parseJsonl(filePath){
     return parsedContent;
 }
 
+function _type(values){
+    if(typeof(values) !== 'object') values = [values]
+    if(!values) return {type : 'No values', size : 'No values'};
+
+    let info = values.map(val => {
+        if(typeof(val) != 'string') return {type : typeof(val), size : 'Not measured'};
+        if( val.slice(0,2) == '0x'){ //could also use web3.utils.isHexStrict()
+            let length = val.slice(2).length / 2;
+            if( length == 32) return {type : 'Bytes32', size : length};
+            return {type : 'Bytes', size : length};
+        }
+        let length = val.length;
+        return {type : typeof(val), size : length};
+    });
+    return info;
+}
+
+
 module.exports = {
     sleep : _sleep,
     toHex : _toHex,
@@ -155,5 +175,6 @@ module.exports = {
     getRandomUint : getRandom_uint,
     getRandomBytes : getRandom_bytes,
     getIdentifiers : _getIdentifiers,
-    parseJsonl: _parseJsonl
+    parseJsonl: _parseJsonl,
+    type: _type
 };

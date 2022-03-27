@@ -19,8 +19,8 @@ const HEADERS = {
         retrieve_txData : ['Date' , 'Retrieval Time (ms)']
     },
     ipfs:{
-        upload : ['Date', 'CID', 'Size in Repo(Bytes)', 'True Size(Bytes)', 'Upload Time (ms)'],
-        retrieve : ['Date', 'Size in Repo(Bytes)', 'True Size(Bytes)', 'Retrieval Time (ms)'],
+        upload : ['Date', 'CID', 'Upload Time (ms)', 'Size in Repo(Bytes)'],
+        retrieve : ['Date', 'Retrieval Time (ms)', 'Size in Repo(Bytes)', 'Size in Repo(Bytes)'],
         upload_blockchain : executeHeaders,
         retrieve_Storage : storageHeaders,
         retrieve_Storage_All : ['Date','ID','Retrieval Time (ms)'],
