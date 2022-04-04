@@ -9,8 +9,8 @@ const CSV = require('./csvClassModule.js').CSV;  //class
 const csvObject = new CSV();
 //const bee = new Bee("https://gateway.ethswarm.org");
 
-const POSTAGE_STAMPS_AMOUNT = '100';
-const POSTAGE_STAMPS_DEPTH = 17
+const POSTAGE_STAMPS_AMOUNT = '10000000';
+const POSTAGE_STAMPS_DEPTH = 20
 
 var postageBatchId;
 
@@ -23,6 +23,7 @@ async function _configPostageBatch(){
         for(const batch of availableBatches){
             if(batch.batchTTL >= 0){
                 batchId = batch.batchID;
+                console.log('\nUsing batchId:', batchId);
                 break;
             }
         }
@@ -37,7 +38,8 @@ async function _configPostageBatch(){
 async function _uploadText(data, keepStats=true){
     try{
         let options = {
-            pin: true
+            pin: true,
+            deferred : false // when true, node uploads data locally and then pushes chunks to the network
             // encrypt: true
         };
 
