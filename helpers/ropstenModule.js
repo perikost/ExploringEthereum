@@ -26,10 +26,11 @@ var txDebugger;
 var useAccessList;
 var errors = 0;
 var fromContractCreation;
+var clearCache;
 
 // TODO: maybe make capitalize the vars above to be able to tell them apart easily
 
-function _loadBlockchain({provider = 'localhost',  signMeth = 'web3', accessList= false, hardFork = 'london'} = {}){ 
+function _loadBlockchain({provider = 'localhost',  signMeth = 'web3', accessList= false, hardFork = 'london', cache = true} = {}){ 
     // TODO: improve
     if(provider != 'localhost') provider = `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`;
     else provider = 'http://localhost:8545'
@@ -40,10 +41,10 @@ function _loadBlockchain({provider = 'localhost',  signMeth = 'web3', accessList
     csvObject = new CSV();
     txDebugger = new TransactionDebugger(web3);
     useAccessList = accessList;
+    clearCache = cache;
     
     return web3;
 }
-
 
 function _config(contract, signMeth = 'web3', fromConCreation = false){  
     // signMethod can be 1) 'web3' -> to sign using Web3
@@ -311,6 +312,7 @@ async function _retrieveStorage(keepStats = true){
 
     for(var getter of formattedCon.getters){
         if(!getter.execute) continue;  // don't execute the getter
+        if(clearCache) utils.clearCache();
 
         let name = getter.name;
         await executeGetter(name, {keepStats : keepStats});
@@ -328,6 +330,7 @@ async function _retrieveEvents(keepStats = true){
 
     for(var eve of formattedCon.events){
         if(!eve.retrieve) continue; // don't retrieve the Event
+        if(clearCache) utils.clearCache();
 
         try{
             let name = eve.name;
@@ -400,6 +403,7 @@ async function _retrieveIndexedEvents(keepStats = true){
 
     for(var eve of formattedCon.indexedEvents){
         if(!eve.retrieve) continue; // don't retrieve the Event
+        if(clearCache) utils.clearCache();
 
         try{
 
@@ -472,6 +476,7 @@ async function _retrieveAnonymousEvents(keepStats = true) {
 
     for(var eve of formattedCon.anonymousEvents){
         if(!eve.retrieve) continue; // don't retrieve the Event
+        if(clearCache) utils.clearCache();
 
         try {
             let numOfLogs;
@@ -585,6 +590,7 @@ async function _retrievePlainTransactionData(path, keepStats = true) {
     name = name.split('.')[0]
 
     for(const txHash of storedInTxData){
+        if(clearCache) utils.clearCache();
         try {
             // let begin = performance.now();
             let result = await retrieveTxData(txHash);

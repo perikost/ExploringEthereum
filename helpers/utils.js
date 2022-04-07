@@ -7,6 +7,7 @@ const web3 = new Web3(new Web3.providers.HttpProvider(provider));
 const formattedContractsPath = './formatted_contracts';
 const fs = require('fs');
 const prompt = require('prompt-sync')({sigint: true});
+const shell = require('shelljs');
 
 function _sleep(sec) {
     let ms = sec*1000;
@@ -165,6 +166,16 @@ function _type(values){
     return info;
 }
 
+function _clearCache(){
+    // must run script as sudo (sudo node utils.js) for this to work
+    // shell.exec(path.join(__dirname, 'cache.sh'));
+
+    // alternatively
+    shell.exec('free');
+    shell.exec(`sync; echo ${process.env.USER_PASSWORD} | sudo -S sh -c 'echo 3 >/proc/sys/vm/drop_caches' && echo ''`);
+    shell.exec('free');
+}
+
 
 module.exports = {
     sleep : _sleep,
@@ -176,5 +187,6 @@ module.exports = {
     getRandomBytes : getRandom_bytes,
     getIdentifiers : _getIdentifiers,
     parseJsonl: _parseJsonl,
-    type: _type
+    type: _type,
+    clearCache: _clearCache
 };
