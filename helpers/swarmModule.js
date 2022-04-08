@@ -89,8 +89,13 @@ async function retrieveText(hash, keepStats=true){
     }
 }
 
-async function _retrieveAllTexts(hashes){
-    for(const hash of hashes) await retrieveText(hash);
+async function _retrieveAllTexts(hashes, times = 1, clearCache = true){
+    for(let i = 0; i < times; i++){
+        for(const hash of hashes){
+            if(clearCache) utils.clearCache();
+            await retrieveText(hash);
+        }
+    }
 }
 
 module.exports = {

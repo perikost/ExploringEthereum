@@ -1,13 +1,13 @@
 #!/bin/sh
 
 # log memory stats
-free
+free -h
 
 # free pagecache, dentries and inodes
 sync; sh -c 'echo 3 >/proc/sys/vm/drop_caches' && echo ''
 
 # log memory stats
-free
+free -h
 
 # -S, --stdin (Write the prompt to the standard error and read the password 
 # from the standard input instead of using the terminal device.)

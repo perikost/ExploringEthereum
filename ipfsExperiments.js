@@ -48,8 +48,8 @@ async function loopUpload(times){
 
 //     // retrieve
 //     let cids = utils.getIdentifiers('ipfs');
-//     await ipfs.retrieveAllTexts(cids);
+//     await ipfs.retrieveAllTexts(cids, 20);
 // })();
 
 // uncomment to compute average retrieval latency of a folder's csv records
-csv.average('csv_records/27-03-2022/')
+// csv.average('csv_records/27-03-2022/')

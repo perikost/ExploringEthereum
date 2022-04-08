@@ -107,11 +107,14 @@ async function retrieveText(cid, keepStats = true){
     }
 }
 
-async function _retrieveAllTexts(cids, keepStats = true){
+async function _retrieveAllTexts(cids, times=1, keepStats = true, clearCache = true){
     let localCids = await getLocalCids();
-    console.log(localCids);
-    for(const cid of cids){
-        if(localCids.includes(cid)) await retrieveText(cid, keepStats);
+    
+    for(let i = 0; i < times; i++){
+        for(const cid of cids){
+            if(clearCache) utils.clearCache();
+            if(localCids.includes(cid)) await retrieveText(cid, keepStats);
+        }
     }
 }
 

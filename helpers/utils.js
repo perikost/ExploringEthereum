@@ -1,3 +1,4 @@
+require('dotenv').config();
 const randomstring = require("randomstring");
 const path = require('path');
 const CSV = require('./csvClassModule.js');
@@ -171,9 +172,9 @@ function _clearCache(){
     // shell.exec(path.join(__dirname, 'cache.sh'));
 
     // alternatively
-    shell.exec('free');
+    shell.exec('free -h');
     shell.exec(`sync; echo ${process.env.USER_PASSWORD} | sudo -S sh -c 'echo 3 >/proc/sys/vm/drop_caches' && echo ''`);
-    shell.exec('free');
+    shell.exec('free -h');
 }
 
 

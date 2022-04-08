@@ -12,7 +12,7 @@ async function uploadToSwarm(input){
 }
 
 
-async function uploadStrings({start = 16384, step = 4, maxStringSize = 16384} = {}){
+async function uploadStrings({start = 4, step = 4, maxStringSize = 16384} = {}){
 
     let i = start * 1024;
     maxStringSize *= 1024;
@@ -38,18 +38,18 @@ async function loopUpload(times){
 }
 
 
-/* 
-uncomment to run the experiments
+
+/* // uncomment to run the experiments
 (async function(){
     // upload
     await swarm.configPostageBatch();
-    await loopUpload(20);
+    await loopUpload(1);
     
     // retrieve
     let hashes = utils.getIdentifiers('swarm');
-    await swarm.retrieveAllTexts(hashes);
-})(); 
-*/
+    await swarm.retrieveAllTexts(hashes, 20);
+})();  */
+
 
 // uncomment to compute average retrieval latency of a folder's csv records
 // csv.average('csv_records/27-03-2022/')

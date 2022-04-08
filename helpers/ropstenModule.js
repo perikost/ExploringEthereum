@@ -389,7 +389,7 @@ async function _retrieveEvents(keepStats = true){
             console.log(`Retrieval time (events) |${eve.name}|: `, totalTime, 'Result: ',result.length);
             console.log(result.length > 10? result.substring(0,10) : result);
 
-            await utils.sleep(2);
+            // await utils.sleep(2);
         }catch(error){
             console.log(error);
             process.exit();
@@ -461,7 +461,7 @@ async function _retrieveIndexedEvents(keepStats = true){
             console.log(`Retrieval time (events) |${eve.name}|: `, totalTime, 'Result: ',result.length);
             console.log(result.length > 10? result.substring(0,10) : result);
 
-            await utils.sleep(2);
+            // await utils.sleep(2);
         }catch(error){
             errors++;
             console.log(error);
@@ -570,7 +570,7 @@ async function _retrieveAnonymousEvents(keepStats = true) {
             console.log(`Retrieval time (anonymous) |${eve.name}|: `, totalTime, 'Result: ',result.length);
             console.log(result.length > 10? result.substring(0,10) : result);
 
-            await utils.sleep(2);
+            // await utils.sleep(2);
         } catch (error) {
             errors++;
             console.log(error);
@@ -612,7 +612,7 @@ async function _retrievePlainTransactionData(path, keepStats = true) {
             }
             console.log(`Retrieval time (txData) : `, result.retrievalTime, 'Result: ', result.decodedInput.length);
             console.log(result.decodedInput.length > 10? result.decodedInput.substring(0,10) : result.decodedInput);
-            await utils.sleep(2);
+            // await utils.sleep(2);
         } catch (error) {
             errors++;
             console.log(error);
