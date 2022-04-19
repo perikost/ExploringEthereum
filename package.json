@@ -19,6 +19,7 @@
     "ipfs-http-client": "^56.0.1",
     "ipfs-unixfs": "^6.0.6",
     "mime-types": "^2.1.29",
+    "multiformats": "^9.6.4",
     "prompt-sync": "^4.1.6",
     "randomstring": "^1.1.5",
     "shelljs": "^0.8.5",

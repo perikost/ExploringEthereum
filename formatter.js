@@ -115,10 +115,10 @@ function formatContract(con){
 }
 
 function getJsonFiles(chosenJsons){
-    chosenJsons = chosenJsons.replaceAll(' ', '').split(',');
+    chosenJsons = chosenJsons.toLowerCase().replaceAll(' ', '').split(',');
 
     let files = fs.readdirSync(contractsPath).filter(file => {
-        if (chosenJsons && chosenJsons.length > 0) return chosenJsons.includes(path.parse(file).name);
+        if (chosenJsons && chosenJsons.length > 0) return chosenJsons.includes(String(path.parse(file).name).toLocaleLowerCase());
         else return file.includes('.json');
     })
 

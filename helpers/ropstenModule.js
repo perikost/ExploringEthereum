@@ -142,7 +142,7 @@ async function send(input, account, accessList){
         if(formattedCon) accountTo = formattedCon.contractAddress;
         if(account) accountTo = account;
         let nonce = await web3.eth.getTransactionCount(process.env.MY_ADDRESS);
-        let gasprice = await getGaspriceBasedOnHistory();
+        let gasprice = await getGaspriceBasedOnHistory(); // TODO: Should make it work in localhost mode as well where getFeeHistory() isn't available
 
         if(signMethod == 'web3'){
             var rawTx = {
@@ -221,9 +221,9 @@ async function executeFunction(name, {values = [], keepStats = true} = {}){
         }
         
         let message = con.methods[name].apply(null, values).encodeABI();
-        let accessList = useAccessList ? await con.methods[name].apply(null, values).createAccessList({from: process.env.MY_ADDRESS}): null;
+        let accessList = useAccessList ? await con.methods[name].apply(null, values).createAccessList({from: process.env.MY_ADDRESS}).accessList: null;
         // Contract's address is included even though it is not used in any EXT* operation, resulting in 2400 extra
-        let result = await send(message, null, accessList.accessList);
+        let result = await send(message, null, accessList);
         
         if(keepStats){
             let executionTime = result.executionTime;
@@ -240,7 +240,7 @@ async function executeFunction(name, {values = [], keepStats = true} = {}){
             let folderPath = csvObject.writeStats(toWrite, 'blockchain', 'execute', name, formattedCon.name);
 
             await txDebugger.debugTransaction(txHash);
-            await txDebugger.saveDebuggedTransaction(message, accessList.accessList, folderPath + `/${name}`, Date().slice(0,24).replaceAll(' ', '_'))
+            await txDebugger.saveDebuggedTransaction(message, accessList, folderPath + `/${name}`, Date().slice(0,24).replaceAll(' ', '_'))
             // normal
             // csv.write(toWrite, 'blockchain', 'execute', name, formattedCon.name);
         }

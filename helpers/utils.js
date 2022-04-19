@@ -9,6 +9,9 @@ const formattedContractsPath = './formatted_contracts';
 const fs = require('fs');
 const prompt = require('prompt-sync')({sigint: true});
 const shell = require('shelljs');
+const { CID } = require('multiformats/cid');
+const hashes = require('multihashes')
+// const { inspect } = require('util');
 
 function _sleep(sec) {
     let ms = sec*1000;
@@ -133,6 +136,23 @@ function chooseCsvFolder(rootFolder){
         return null;
     }
 }
+
+function _inspectCid(cidString){
+    let cid = CID.parse(cidString);
+    let inspectedCid = CID.inspectBytes(cid.bytes.subarray(0, 10));
+
+    for(const [key,val] of Object.entries(inspectedCid)){
+        inspectedCid[key] = web3.utils.toHex(val)
+    }
+
+    inspectedCid.digest = '0x' + Buffer.from(cid.multihash.digest).toString('hex');
+    
+    // or
+    // let decoded = hashes.decode(Buffer.from(cid.multihash.bytes))
+    // inspectedCid.digest = '0x' + hashes.toHexString(decoded.digest);
+
+    return inspectedCid;
+}
 // IPFS & Swarm
 
 
@@ -189,5 +209,7 @@ module.exports = {
     getIdentifiers : _getIdentifiers,
     parseJsonl: _parseJsonl,
     type: _type,
-    clearCache: _clearCache
+    clearCache: _clearCache,
+    inspectCid: _inspectCid,
+    web3: web3
 };

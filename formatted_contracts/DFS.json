@@ -1,0 +1,484 @@
+{
+  "name": "DFS",
+  "jsonPath": "/home/perikost/nodejs/exploringEthereum/local_blockchain/build/contracts/DFS.json",
+  "contractAddress": "0x2F1889C8727Da7B72486732fBc86EfD496B2E435",
+  "fallback": false,
+  "functions": [
+    {
+      "name": "cid",
+      "execute": true,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "name": "cidUint",
+      "execute": true,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "name": "completeCid",
+      "execute": true,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "name": "hashDigest",
+      "execute": true,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "name": "storeCid",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "value": null,
+          "length": null
+        },
+        {
+          "type": "bytes8",
+          "value": null,
+          "length": null
+        },
+        {
+          "type": "bytes8",
+          "value": null,
+          "length": null
+        },
+        {
+          "type": "bytes8",
+          "value": null,
+          "length": null
+        },
+        {
+          "type": "bytes8",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "storeCidUint",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "value": null,
+          "length": null
+        },
+        {
+          "type": "uint64",
+          "value": null
+        },
+        {
+          "type": "uint64",
+          "value": null
+        },
+        {
+          "type": "uint64",
+          "value": null
+        },
+        {
+          "type": "uint64",
+          "value": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "storecompleteCid",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "string",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "storeHashDigest",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "logCompleteCid",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "string",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "logSelfDescribedCid",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "value": null,
+          "length": null
+        },
+        {
+          "type": "bytes8",
+          "value": null,
+          "length": null
+        },
+        {
+          "type": "bytes8",
+          "value": null,
+          "length": null
+        },
+        {
+          "type": "bytes8",
+          "value": null,
+          "length": null
+        },
+        {
+          "type": "bytes8",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "reset",
+      "execute": true,
+      "inputs": [],
+      "outputs": []
+    }
+  ],
+  "getters": [],
+  "events": [
+    {
+      "name": "cidEvent",
+      "retrieve": true,
+      "toFind": null,
+      "paramType": "type of parameter to search",
+      "unused": false,
+      "fallback": false,
+      "index": {
+        "name": "name of parameter to search",
+        "value": null
+      }
+    },
+    {
+      "name": "selfDescribedCid",
+      "retrieve": true,
+      "toFind": null,
+      "paramType": "type of parameter to search",
+      "unused": false,
+      "fallback": false,
+      "index": {
+        "name": "name of parameter to search",
+        "value": null
+      }
+    }
+  ],
+  "indexedEvents": [],
+  "anonymousEvents": [],
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "cid",
+          "type": "string"
+        }
+      ],
+      "name": "cidEvent",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "hashDigest",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes8",
+          "name": "hashFunction",
+          "type": "bytes8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes8",
+          "name": "hashSize",
+          "type": "bytes8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes8",
+          "name": "multicodec",
+          "type": "bytes8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes8",
+          "name": "version",
+          "type": "bytes8"
+        }
+      ],
+      "name": "selfDescribedCid",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "cid",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "hashDigest",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes8",
+          "name": "hashFunction",
+          "type": "bytes8"
+        },
+        {
+          "internalType": "bytes8",
+          "name": "hashSize",
+          "type": "bytes8"
+        },
+        {
+          "internalType": "bytes8",
+          "name": "multicodec",
+          "type": "bytes8"
+        },
+        {
+          "internalType": "bytes8",
+          "name": "version",
+          "type": "bytes8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "cidUint",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "hashDigest",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint64",
+          "name": "hashFunction",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "hashSize",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "multicodec",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "version",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "completeCid",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "hashDigest",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_hashDigest",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes8",
+          "name": "_hashFunction",
+          "type": "bytes8"
+        },
+        {
+          "internalType": "bytes8",
+          "name": "_hashSize",
+          "type": "bytes8"
+        },
+        {
+          "internalType": "bytes8",
+          "name": "_multicodec",
+          "type": "bytes8"
+        },
+        {
+          "internalType": "bytes8",
+          "name": "_version",
+          "type": "bytes8"
+        }
+      ],
+      "name": "storeCid",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_hashDigest",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint64",
+          "name": "_hashFunction",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "_hashSize",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "_multicodec",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "_version",
+          "type": "uint64"
+        }
+      ],
+      "name": "storeCidUint",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_cid",
+          "type": "string"
+        }
+      ],
+      "name": "storecompleteCid",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_hashDigest",
+          "type": "bytes32"
+        }
+      ],
+      "name": "storeHashDigest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_cid",
+          "type": "string"
+        }
+      ],
+      "name": "logCompleteCid",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_hashDigest",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes8",
+          "name": "_hashFunction",
+          "type": "bytes8"
+        },
+        {
+          "internalType": "bytes8",
+          "name": "_hashSize",
+          "type": "bytes8"
+        },
+        {
+          "internalType": "bytes8",
+          "name": "_multicodec",
+          "type": "bytes8"
+        },
+        {
+          "internalType": "bytes8",
+          "name": "_version",
+          "type": "bytes8"
+        }
+      ],
+      "name": "logSelfDescribedCid",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "reset",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]
+}
