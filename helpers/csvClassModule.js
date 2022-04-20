@@ -101,7 +101,27 @@ class _CSV {
 
 function chooseRootFolder(rootFolder){
     const folders = fs.existsSync(rootFolder)? fs.readdirSync(rootFolder) : null;
+    // if folders, sort them by year-month-day (asc)
     if(!folders || folders.length == 0) return null;
+    else {
+        let year = str => str.substring(6,10);
+        let month = str => str.substring(3,5);
+        let day = str => str.substring(0,2);
+        
+        folders.sort((a,b) => {
+            if(year(a) > year(b)) return 1;
+    
+            if (year(a) === year(b)){
+                if(month(a) > month(b)) return 1;
+                if (month(a) === month(b)){
+                    if (day(a) > day(b)) return 1;
+                }
+            }
+    
+            return -1;
+        });
+    }
+    // else folders.sort((a,b) => a.substring(3,10) > b.substring(3,10) ? 1 : -1);
 
     console.log('');
     let add = prompt('Would you like to add the csv records to a previous folder (y/n)? ');
