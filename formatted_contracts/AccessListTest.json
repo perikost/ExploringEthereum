@@ -1,0 +1,71 @@
+{
+  "name": "AccessListTest",
+  "jsonPath": "/home/perikost/nodejs/exploringEthereum/local_blockchain/build/contracts/AccessListTest.json",
+  "contractAddress": "0x2A5c5c1Ceb5AF82cA3d76e546C89a7f733508e10",
+  "fallback": false,
+  "functions": [
+    {
+      "name": "logBalance",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "address",
+          "value": "0x9C71fBe2d28080b8afa88cea8a1E319De2c09d44",
+          "length": null
+        }
+      ],
+      "outputs": []
+    }
+  ],
+  "getters": [],
+  "events": [
+    {
+      "name": "balance",
+      "retrieve": true,
+      "toFind": null,
+      "paramType": "type of parameter to search",
+      "unused": false,
+      "fallback": false,
+      "index": {
+        "name": "name of parameter to search",
+        "value": null
+      }
+    }
+  ],
+  "indexedEvents": [],
+  "anonymousEvents": [],
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "senderBalance",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "inputAccountBalance",
+          "type": "uint256"
+        }
+      ],
+      "name": "balance",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_inputAccount",
+          "type": "address"
+        }
+      ],
+      "name": "logBalance",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]
+}

@@ -3,7 +3,7 @@ const fs = require('fs');
 const csv = require('./csvClassModule.js');
 const utils = require('./utils.js');
 
-const REEXEC = 1000000000;
+const REEXEC = Number.MAX_SAFE_INTEGER;
 const BASE_FEE = 21000;
 
 module.exports = class TransactionDebugger {
