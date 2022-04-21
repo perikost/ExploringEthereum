@@ -37,6 +37,7 @@ module.exports = class TransactionDebugger {
         let steps = this.debuggedTx.structLogs;
         steps.map((step, index) => step.step = index);
         let txDataInfo = txData ?  processTxData(txData): 'not provided';
+        let accessListGas = accessListCost(accessList);
         let opcodesGas = steps && steps.length? steps.reduce((previousStep, currentStep) => {return {gasCost : previousStep.gasCost + currentStep.gasCost }}).gasCost : 0
         let info = {
             transactionHash: this.debuggedTx.txHash,
@@ -45,7 +46,8 @@ module.exports = class TransactionDebugger {
             opcodesGas: opcodesGas,
             opcodesStartGas: steps && steps.length ? steps[0].gas: 0,
             opcodesRemainingGas: steps && steps.length? steps[steps.length - 1].gas: 0,
-            gasUsed: this.debuggedTx.gas? this.debuggedTx.gas : BASE_FEE + opcodesGas + (txDataInfo.gas? txDataInfo.gas : 0),
+            gasUsed: this.debuggedTx.gas? this.debuggedTx.gas : BASE_FEE + opcodesGas + (txDataInfo.gas? txDataInfo.gas : 0) + accessListGas,
+            accessListGas: accessListGas,
             accessList: accessList? accessList : null,
             steps: steps
         }
@@ -150,4 +152,15 @@ function processTxData(txData){
         gas: nonZeroBytes*16 + zeroBytes*4
     };
 }
-  
+
+function accessListCost(accessList){
+    let gasUsed = 0;
+    if(accessList) accessList.forEach(element => {
+        // each element of the access list corresponds to an address, so add 2400
+        gasUsed += 2400;
+
+        // each element of the access list has a storageKeys array
+        gasUsed += element.storageKeys.length * 1900;
+    });
+    return gasUsed;
+}

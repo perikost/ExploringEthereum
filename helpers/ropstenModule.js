@@ -30,7 +30,7 @@ var clearCache;
 
 // TODO: maybe make capitalize the vars above to be able to tell them apart easily
 
-function _loadBlockchain({provider = 'localhost',  signMeth = 'web3', accessList= false, hardFork = 'london', cache = true} = {}){ 
+function _loadBlockchain({provider = 'localhost',  signMeth = 'web3', accessList= true, hardFork = 'london', cache = true} = {}){ 
     // TODO: improve
     if(provider != 'localhost') provider = `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`;
     else provider = 'http://localhost:8545'
@@ -221,7 +221,8 @@ async function executeFunction(name, {values = [], keepStats = true} = {}){
         }
         
         let message = con.methods[name].apply(null, values).encodeABI();
-        let accessList = useAccessList ? await con.methods[name].apply(null, values).createAccessList({from: process.env.MY_ADDRESS}).accessList: null;
+        let accessList = useAccessList ? await con.methods[name].apply(null, values).createAccessList({from: process.env.MY_ADDRESS}): null;
+        if(accessList) accessList = accessList.accessList;
         // Contract's address is included even though it is not used in any EXT* operation, resulting in 2400 extra
         let result = await send(message, null, accessList);
         
