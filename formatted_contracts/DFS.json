@@ -1,33 +1,9 @@
 {
   "name": "DFS",
   "jsonPath": "/home/perikost/nodejs/exploringEthereum/local_blockchain/build/contracts/DFS.json",
-  "contractAddress": "0x2F1889C8727Da7B72486732fBc86EfD496B2E435",
+  "contractAddress": "0x945384337C793300BCDF485A5a89a0aa5FF5fC7A",
   "fallback": false,
   "functions": [
-    {
-      "name": "cid",
-      "execute": true,
-      "inputs": [],
-      "outputs": []
-    },
-    {
-      "name": "cidUint",
-      "execute": true,
-      "inputs": [],
-      "outputs": []
-    },
-    {
-      "name": "completeCid",
-      "execute": true,
-      "inputs": [],
-      "outputs": []
-    },
-    {
-      "name": "hashDigest",
-      "execute": true,
-      "inputs": [],
-      "outputs": []
-    },
     {
       "name": "storeCid",
       "execute": true,
@@ -61,35 +37,19 @@
       "outputs": []
     },
     {
-      "name": "storeCidUint",
+      "name": "storeCid0",
       "execute": true,
       "inputs": [
         {
-          "type": "bytes32",
+          "type": "string",
           "value": null,
           "length": null
-        },
-        {
-          "type": "uint64",
-          "value": null
-        },
-        {
-          "type": "uint64",
-          "value": null
-        },
-        {
-          "type": "uint64",
-          "value": null
-        },
-        {
-          "type": "uint64",
-          "value": null
         }
       ],
       "outputs": []
     },
     {
-      "name": "storecompleteCid",
+      "name": "storeCid1",
       "execute": true,
       "inputs": [
         {
@@ -113,11 +73,83 @@
       "outputs": []
     },
     {
-      "name": "logCompleteCid",
+      "name": "storeSwarmHash",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "storeSwarmHashEncrypted",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "bytes",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "logCid0",
       "execute": true,
       "inputs": [
         {
           "type": "string",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "logCid1",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "string",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "logHashDigest",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "logSwarm",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "value": null,
+          "length": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "name": "logSwarmEncrypted",
+      "execute": true,
+      "inputs": [
+        {
+          "type": "bytes",
           "value": null,
           "length": null
         }
@@ -163,10 +195,107 @@
       "outputs": []
     }
   ],
-  "getters": [],
+  "getters": [
+    {
+      "name": "cid",
+      "execute": true,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32"
+        },
+        {
+          "type": "bytes8"
+        },
+        {
+          "type": "bytes8"
+        },
+        {
+          "type": "bytes8"
+        },
+        {
+          "type": "bytes8"
+        }
+      ]
+    },
+    {
+      "name": "cid0",
+      "execute": true,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "cid1",
+      "execute": true,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "hashDigest",
+      "execute": true,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32"
+        }
+      ]
+    },
+    {
+      "name": "swarmHash",
+      "execute": true,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32"
+        }
+      ]
+    },
+    {
+      "name": "swarmHashEncrypted",
+      "execute": true,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes"
+        }
+      ]
+    }
+  ],
   "events": [
     {
-      "name": "cidEvent",
+      "name": "completeCid0",
+      "retrieve": true,
+      "toFind": null,
+      "paramType": "type of parameter to search",
+      "unused": false,
+      "fallback": false,
+      "index": {
+        "name": "name of parameter to search",
+        "value": null
+      }
+    },
+    {
+      "name": "completeCid1",
+      "retrieve": true,
+      "toFind": null,
+      "paramType": "type of parameter to search",
+      "unused": false,
+      "fallback": false,
+      "index": {
+        "name": "name of parameter to search",
+        "value": null
+      }
+    },
+    {
+      "name": "digest",
       "retrieve": true,
       "toFind": null,
       "paramType": "type of parameter to search",
@@ -179,6 +308,30 @@
     },
     {
       "name": "selfDescribedCid",
+      "retrieve": true,
+      "toFind": null,
+      "paramType": "type of parameter to search",
+      "unused": false,
+      "fallback": false,
+      "index": {
+        "name": "name of parameter to search",
+        "value": null
+      }
+    },
+    {
+      "name": "swarm",
+      "retrieve": true,
+      "toFind": null,
+      "paramType": "type of parameter to search",
+      "unused": false,
+      "fallback": false,
+      "index": {
+        "name": "name of parameter to search",
+        "value": null
+      }
+    },
+    {
+      "name": "swarmEnc",
       "retrieve": true,
       "toFind": null,
       "paramType": "type of parameter to search",
@@ -203,7 +356,33 @@
           "type": "string"
         }
       ],
-      "name": "cidEvent",
+      "name": "completeCid0",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "cid",
+          "type": "string"
+        }
+      ],
+      "name": "completeCid1",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "hashDigest",
+          "type": "bytes32"
+        }
+      ],
+      "name": "digest",
       "type": "event"
     },
     {
@@ -241,6 +420,32 @@
         }
       ],
       "name": "selfDescribedCid",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "swarmHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "swarm",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "swarmHashEncrypted",
+          "type": "bytes"
+        }
+      ],
+      "name": "swarmEnc",
       "type": "event"
     },
     {
@@ -278,32 +483,12 @@
     },
     {
       "inputs": [],
-      "name": "cidUint",
+      "name": "cid0",
       "outputs": [
         {
-          "internalType": "bytes32",
-          "name": "hashDigest",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "uint64",
-          "name": "hashFunction",
-          "type": "uint64"
-        },
-        {
-          "internalType": "uint64",
-          "name": "hashSize",
-          "type": "uint64"
-        },
-        {
-          "internalType": "uint64",
-          "name": "multicodec",
-          "type": "uint64"
-        },
-        {
-          "internalType": "uint64",
-          "name": "version",
-          "type": "uint64"
+          "internalType": "string",
+          "name": "",
+          "type": "string"
         }
       ],
       "stateMutability": "view",
@@ -311,7 +496,7 @@
     },
     {
       "inputs": [],
-      "name": "completeCid",
+      "name": "cid1",
       "outputs": [
         {
           "internalType": "string",
@@ -330,6 +515,32 @@
           "internalType": "bytes32",
           "name": "",
           "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "swarmHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "swarmHashEncrypted",
+      "outputs": [
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
         }
       ],
       "stateMutability": "view",
@@ -371,32 +582,12 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
-          "name": "_hashDigest",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "uint64",
-          "name": "_hashFunction",
-          "type": "uint64"
-        },
-        {
-          "internalType": "uint64",
-          "name": "_hashSize",
-          "type": "uint64"
-        },
-        {
-          "internalType": "uint64",
-          "name": "_multicodec",
-          "type": "uint64"
-        },
-        {
-          "internalType": "uint64",
-          "name": "_version",
-          "type": "uint64"
+          "internalType": "string",
+          "name": "_cid",
+          "type": "string"
         }
       ],
-      "name": "storeCidUint",
+      "name": "storeCid0",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -409,7 +600,7 @@
           "type": "string"
         }
       ],
-      "name": "storecompleteCid",
+      "name": "storeCid1",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -430,12 +621,90 @@
     {
       "inputs": [
         {
+          "internalType": "bytes32",
+          "name": "_hash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "storeSwarmHash",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_hash",
+          "type": "bytes"
+        }
+      ],
+      "name": "storeSwarmHashEncrypted",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "string",
           "name": "_cid",
           "type": "string"
         }
       ],
-      "name": "logCompleteCid",
+      "name": "logCid0",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_cid",
+          "type": "string"
+        }
+      ],
+      "name": "logCid1",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_hashDigest",
+          "type": "bytes32"
+        }
+      ],
+      "name": "logHashDigest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_hash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "logSwarm",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_hash",
+          "type": "bytes"
+        }
+      ],
+      "name": "logSwarmEncrypted",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

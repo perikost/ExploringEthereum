@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity 0.8.12;
 
 contract DFS{
@@ -11,22 +12,18 @@ contract DFS{
     bytes8 version;
   }
 
-  struct CIDuint {
-    bytes32 hashDigest;
-    uint64 hashFunction;
-    uint64 hashSize;
-    uint64 multicodec;
-    uint64 version;
-  }
-
   CID public cid;
-  CIDuint public cidUint;  // uint test
   string public cid0;
   string public cid1;
   bytes32 public hashDigest;
+  bytes32 public swarmHash;
+  bytes public swarmHashEncrypted;
 
   event completeCid0(string cid);
   event completeCid1(string cid);
+  event digest(bytes32 hashDigest);
+  event swarm(bytes32 swarmHash);
+  event swarmEnc(bytes swarmHashEncrypted);
   event selfDescribedCid(bytes32 hashDigest, bytes8 hashFunction, bytes8 hashSize, bytes8 multicodec, bytes8 version);
 
   function storeCid(bytes32 _hashDigest, bytes8 _hashFunction, bytes8 _hashSize, bytes8 _multicodec, bytes8 _version) external{
@@ -35,15 +32,6 @@ contract DFS{
     cid.hashSize = _hashSize; 
     cid.multicodec = _multicodec; 
     cid.version = _version; 
-  }
-
-  // uint test
-  function storeCidUint(bytes32 _hashDigest, uint64 _hashFunction, uint64 _hashSize, uint64 _multicodec, uint64 _version) external{
-    cidUint.hashDigest = _hashDigest; 
-    cidUint.hashFunction = _hashFunction; 
-    cidUint.hashSize = _hashSize; 
-    cidUint.multicodec = _multicodec; 
-    cidUint.version = _version; 
   }
 
   function storeCid0(string calldata _cid) external{
@@ -58,12 +46,32 @@ contract DFS{
       hashDigest = _hashDigest;
   }
 
+  function storeSwarmHash(bytes32 _hash) external{
+      swarmHash = _hash;
+  }
+
+  function storeSwarmHashEncrypted(bytes calldata _hash) external{
+      swarmHashEncrypted = _hash;
+  }
+
   function logCid0(string calldata  _cid) external {
     emit completeCid0(_cid);
   }
 
   function logCid1(string calldata  _cid) external {
     emit completeCid1(_cid);
+  }
+
+  function logHashDigest(bytes32 _hashDigest) external {
+    emit digest(_hashDigest);
+  }
+
+  function logSwarm(bytes32 _hash) external {
+    emit swarm(_hash);
+  }
+
+  function logSwarmEncrypted(bytes calldata  _hash) external {
+    emit swarmEnc(_hash);
   }
 
   function logSelfDescribedCid(bytes32 _hashDigest, bytes8 _hashFunction, bytes8 _hashSize, bytes8 _multicodec, bytes8 _version) external {
@@ -75,7 +83,8 @@ contract DFS{
     delete cid0;
     delete cid1;
     delete hashDigest;
-    delete cidUint;  // uint test
+    delete swarmHash;
+    delete swarmHashEncrypted;
   }
 
 }
