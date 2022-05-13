@@ -43,9 +43,9 @@ async function loopExecution({loops = 1,  executionType = 'functions', reset = f
     }else{
         for(var con of contracts){
             blockchain.config(con);
-            for(const [index, value] of getRandomStrings().entries()){
+            for(let [index, value] of getRandomStrings().entries()){
                 for (var i = 0; i < loops; i++) {
-
+                    if(loops > 1) {value = utils.getRandomString(value.length)};
                     if(executionType == 'fallback') await blockchain.fallback(value);
                     if(executionType == 'fallbackMsgData') await blockchain.fallback(value, index);
                     if(executionType == 'functions'){
@@ -67,12 +67,12 @@ async function executeStorageContract() {
 }
 
 async function executeRest() {
-    contracts = utils.getContracts(['FallbackMsgData']);
+    contracts = utils.getContracts(['Events']);
 
     // await loopExecution({executionType: 'functions', startingID: 0});
     // await loopExecution({executionType: 'send_data'});  
     // await loopExecution({executionType: 'fallback'});
-    await loopExecution({executionType: 'fallbackMsgData'});
+    // await loopExecution({executionType: 'fallbackMsgData'});
 }
 
 
