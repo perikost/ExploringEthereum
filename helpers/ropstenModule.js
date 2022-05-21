@@ -116,8 +116,8 @@ async function _fallback(input, id = null, keepStats = true){
         // normal
         // csv.write(toWrite, 'blockchain', 'execute', 'fallback', formattedCon.name);
 
-        await txDebugger.debugTransaction(txHash);
-        await txDebugger.saveDebuggedTransaction(message, null, folderPath, Date().slice(0,24).replaceAll(' ', '_'))
+        // await txDebugger.debugTransaction(txHash);
+        // await txDebugger.saveDebuggedTransaction(message, null, folderPath, Date().slice(0,24).replaceAll(' ', '_'))
     }
 }
 
@@ -240,8 +240,8 @@ async function executeFunction(name, {values = [], keepStats = true} = {}){
             // class
             let folderPath = csvObject.writeStats(toWrite, 'blockchain', 'execute', name, formattedCon.name);
 
-            await txDebugger.debugTransaction(txHash);
-            await txDebugger.saveDebuggedTransaction(message, accessList, folderPath + `/${name}`, Date().slice(0,24).replaceAll(' ', '_'))
+            // await txDebugger.debugTransaction(txHash);
+            // await txDebugger.saveDebuggedTransaction(message, accessList, folderPath + `/${name}`, Date().slice(0,24).replaceAll(' ', '_'))
             // normal
             // csv.write(toWrite, 'blockchain', 'execute', name, formattedCon.name);
         }
@@ -264,6 +264,13 @@ async function _executeFunctions(values = [], keepStats = true){
     }
 }
 
+async function _executeSpecificFunctions(functions = {}, keepStats = true){
+    if(formattedCon.functions.length == 0 || Object.values(functions).length == 0) return; //there are no functions to execute, so return
+
+    for(const [func, vals] of Object.entries(functions)){
+        await executeFunction(func, {values: vals, keepStats: keepStats});
+    }
+}
 
 async function executeGetter(name, {values = [],  keepStats = true} = {}){
     try{
@@ -319,6 +326,19 @@ async function _retrieveStorage(keepStats = true){
         await executeGetter(name, {keepStats : keepStats});
     }
 
+}
+
+async function _isStorageDirty(getters){
+    for(const getter of getters){
+        let result = await executeGetter(getter, {keepStats: false});
+        if(!result) continue;
+        if(typeof result === 'object'){
+            for(const val of Object.values(result)) if(!utils.isEmpty(val)) return true;
+        }else{
+            if(!utils.isEmpty(result)) return true;
+        }
+    }
+    return false;
 }
 
 // TODO:    
@@ -699,5 +719,8 @@ module.exports = {
     retrieveIndexedEvents : _retrieveIndexedEvents,
     retrieveAnonymousEvents : _retrieveAnonymousEvents,
     retrievePlainTransactionData : _retrievePlainTransactionData,
-    executeFunction : executeFunction
+    executeFunction : executeFunction,
+    executeGetter: executeGetter,
+    isStorageDirty: _isStorageDirty,
+    executeSpecificFunctions: _executeSpecificFunctions
 };

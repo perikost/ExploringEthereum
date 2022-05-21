@@ -72,7 +72,7 @@ function formatContract(con){
             func.inputs = [];
             func.outputs = []
 
-            if(item.constant){
+            if(item.constant || item.stateMutability === 'view'){
                 // TODO: check when a func is constant (probably all view functions). Change the code if needed
                 if(item.outputs.length != 0){
                     item.outputs.forEach((output, i) => {

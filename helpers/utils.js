@@ -11,6 +11,7 @@ const prompt = require('prompt-sync')({sigint: true});
 const shell = require('shelljs');
 const { CID } = require('multiformats/cid');
 const hashes = require('multihashes')
+const assert = require('assert');
 // const { inspect } = require('util');
 
 function _sleep(sec) {
@@ -83,6 +84,18 @@ function getRandom_bytes(length){
     let str = getRandom_string(length);
     console.log(length);
     return web3.utils.toHex(str);
+}
+
+
+function _isEmpty(input){
+    // TODO: check what do empty strings (maybe null?) or other data types return and correct the calculation
+    assert(typeof input === 'string', 'Input is not a string');
+    try {
+        var inputBN = web3.utils.toBN(input).toString()
+    } catch (error) {
+        return input.length === 0;
+    }
+    return input ? inputBN == web3.utils.toBN(0).toString() : true 
 }
 // blockchain
 
@@ -211,5 +224,6 @@ module.exports = {
     type: _type,
     clearCache: _clearCache,
     inspectCid: _inspectCid,
-    web3: web3
+    web3: web3,
+    isEmpty: _isEmpty
 };
