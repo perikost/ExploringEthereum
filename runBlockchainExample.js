@@ -41,7 +41,7 @@ async function Retrieve(){
 // TEST
 (async function(){
     blockchain.loadBlockchain();
-    contracts = utils.getContracts();
+    contracts = utils.blockchain.getContracts();
     await Execute()
     await Retrieve();
 })();

@@ -22,7 +22,7 @@ async function retrieveEvents(con, ids){
 
 
 async function loopRetrieval(options){
-    contracts = utils.getContracts(['Events', 'Fallback','FallbackIndexed','FallbackMsgData', 'Storage']);
+    contracts = utils.blockchain.getContracts(['Events', 'Fallback','FallbackIndexed','FallbackMsgData', 'Storage']);
     let ids = [];
     for (let i = 0; i < options.idsCounter; i++) {
        ids.push(i);

@@ -9,12 +9,12 @@ function getRandomStrings(start = 1, maxStringSize = 16384, step = 2){
     while(true){
         let input;
         if(i >= maxStringSize) {
-            input = utils.getRandomString(maxStringSize);
+            input = utils.basics.getRandomString(maxStringSize);
             randomStrings.push(input);
             break;
         }
         
-        input = utils.getRandomString(i);
+        input = utils.basics.getRandomString(i);
         randomStrings.push(input);
         i *= step;
     }
@@ -28,7 +28,7 @@ async function execute(input, reset){
     }
 
     await blockchain.executeFunctions(input);
-    await utils.sleep(2);
+    await utils.basics.sleep(2);
 }
 
 
@@ -45,7 +45,7 @@ async function loopExecution({loops = 1,  executionType = 'functions', reset = f
             blockchain.config(con);
             for(let [index, value] of getRandomStrings().entries()){
                 for (var i = 0; i < loops; i++) {
-                    if(loops > 1) {value = utils.getRandomString(value.length)};
+                    if(loops > 1) {value = utils.basics.getRandomString(value.length)};
                     if(executionType == 'fallback') await blockchain.fallback(value);
                     if(executionType == 'fallbackMsgData') await blockchain.fallback(value, index);
                     if(executionType == 'functions'){
@@ -59,7 +59,7 @@ async function loopExecution({loops = 1,  executionType = 'functions', reset = f
 }
 
 async function executeStorageContract() {
-    contracts = utils.getContracts(['Storage']);
+    contracts = utils.blockchain.getContracts(['Storage']);
 
     // await loopExecution({executionType: 'functions', loops: 2});
     // await loopExecution({executionType: 'functions', reset: true});
@@ -67,7 +67,7 @@ async function executeStorageContract() {
 }
 
 async function executeRest() {
-    contracts = utils.getContracts(['Events']);
+    contracts = utils.blockchain.getContracts(['Events']);
 
     // await loopExecution({executionType: 'functions', startingID: 0});
     // await loopExecution({executionType: 'send_data'});  

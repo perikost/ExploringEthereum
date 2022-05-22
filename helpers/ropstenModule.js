@@ -214,7 +214,7 @@ async function executeFunction(name, {values = [], keepStats = true} = {}){
                     if(input.value){
                         values.push(input.value);
                     }else{
-                        values.push(utils.getRandomInput(input));
+                        values.push(utils.blockchain.getRandomInput(input));
                     }
                 }
             });
@@ -283,7 +283,7 @@ async function executeGetter(name, {values = [],  keepStats = true} = {}){
                     if(input.value){
                         values.push(input.value);
                     }else{
-                        values.push(utils.getRandomInput(input));
+                        values.push(utils.blockchain.getRandomInput(input));
                     }
                 }
             });
@@ -320,7 +320,7 @@ async function _retrieveStorage(keepStats = true){
 
     for(var getter of formattedCon.getters){
         if(!getter.execute) continue;  // don't execute the getter
-        if(clearCache) utils.clearCache();
+        if(clearCache) utils.basics.clearCache();
 
         let name = getter.name;
         await executeGetter(name, {keepStats : keepStats});
@@ -333,9 +333,9 @@ async function _isStorageDirty(getters){
         let result = await executeGetter(getter, {keepStats: false});
         if(!result) continue;
         if(typeof result === 'object'){
-            for(const val of Object.values(result)) if(!utils.isEmpty(val)) return true;
+            for(const val of Object.values(result)) if(!utils.blockchain.isEmpty(val)) return true;
         }else{
-            if(!utils.isEmpty(result)) return true;
+            if(!utils.blockchain.isEmpty(result)) return true;
         }
     }
     return false;
@@ -351,7 +351,7 @@ async function _retrieveEvents(keepStats = true){
 
     for(var eve of formattedCon.events){
         if(!eve.retrieve) continue; // don't retrieve the Event
-        if(clearCache) utils.clearCache();
+        if(clearCache) utils.basics.clearCache();
 
         try{
             let name = eve.name;
@@ -410,7 +410,7 @@ async function _retrieveEvents(keepStats = true){
             console.log(`Retrieval time (events) |${eve.name}|: `, totalTime, 'Result: ',result.length);
             console.log(result.length > 10? result.substring(0,10) : result);
 
-            // await utils.sleep(2);
+            // await utils.basics.sleep(2);
         }catch(error){
             console.log(error);
             process.exit();
@@ -424,7 +424,7 @@ async function _retrieveIndexedEvents(keepStats = true){
 
     for(var eve of formattedCon.indexedEvents){
         if(!eve.retrieve) continue; // don't retrieve the Event
-        if(clearCache) utils.clearCache();
+        if(clearCache) utils.basics.clearCache();
 
         try{
 
@@ -482,7 +482,7 @@ async function _retrieveIndexedEvents(keepStats = true){
             console.log(`Retrieval time (events) |${eve.name}|: `, totalTime, 'Result: ',result.length);
             console.log(result.length > 10? result.substring(0,10) : result);
 
-            // await utils.sleep(2);
+            // await utils.basics.sleep(2);
         }catch(error){
             errors++;
             console.log(error);
@@ -497,7 +497,7 @@ async function _retrieveAnonymousEvents(keepStats = true) {
 
     for(var eve of formattedCon.anonymousEvents){
         if(!eve.retrieve) continue; // don't retrieve the Event
-        if(clearCache) utils.clearCache();
+        if(clearCache) utils.basics.clearCache();
 
         try {
             let numOfLogs;
@@ -591,7 +591,7 @@ async function _retrieveAnonymousEvents(keepStats = true) {
             console.log(`Retrieval time (anonymous) |${eve.name}|: `, totalTime, 'Result: ',result.length);
             console.log(result.length > 10? result.substring(0,10) : result);
 
-            // await utils.sleep(2);
+            // await utils.basics.sleep(2);
         } catch (error) {
             errors++;
             console.log(error);
@@ -611,7 +611,7 @@ async function _retrievePlainTransactionData(path, keepStats = true) {
     name = name.split('.')[0]
 
     for(const txHash of storedInTxData){
-        if(clearCache) utils.clearCache();
+        if(clearCache) utils.basics.clearCache();
         try {
             // let begin = performance.now();
             let result = await retrieveTxData(txHash);
@@ -633,7 +633,7 @@ async function _retrievePlainTransactionData(path, keepStats = true) {
             }
             console.log(`Retrieval time (txData) : `, result.retrievalTime, 'Result: ', result.decodedInput.length);
             console.log(result.decodedInput.length > 10? result.decodedInput.substring(0,10) : result.decodedInput);
-            // await utils.sleep(2);
+            // await utils.basics.sleep(2);
         } catch (error) {
             errors++;
             console.log(error);

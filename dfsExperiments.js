@@ -3,13 +3,13 @@ const {CID} = require('multiformats/cid')
 const utils = require('./helpers/utils.js');
 
 let web3 = utils.web3;
-let contract = utils.getContracts(['DFS'])[0];
+let contract = utils.blockchain.getContracts(['DFS'])[0];
 blockchain.loadBlockchain({provider: 'infura', accessList: false});
 blockchain.config(contract);
 
 
 async function storeCid0(cid, cleanStorage = true){
-    let inspectedCid =  utils.inspectCid(cid);
+    let inspectedCid =  utils.dfs.inspectCid(cid);
     if(cleanStorage && await blockchain.isStorageDirty(['cid', 'cid0', 'hashDigest'])) await blockchain.executeFunction('reset');
 
     await blockchain.executeSpecificFunctions({
@@ -26,7 +26,7 @@ async function storeCid1(cid, cleanStorage = true){
     cid = CID.parse(cid);
     cid = cid.version === 1 ? cid.toString(): cid.toV1().toString();
     
-    let inspectedCid =  utils.inspectCid(cid);
+    let inspectedCid =  utils.dfs.inspectCid(cid);
     if(cleanStorage && await blockchain.isStorageDirty(['cid', 'cid1'])) await blockchain.executeFunction('reset');
 
     await blockchain.executeSpecificFunctions({

@@ -18,12 +18,12 @@ async function uploadStr({step = 1, maxStringSize = 5} = {}){
     while(true){
         let input;
         if(i >= maxStringSize) {
-            input = utils.getRandomString(maxStringSize);
+            input = utils.basics.getRandomString(maxStringSize);
             await uploadToSwarm(input);
             break;
         }
         
-        input = utils.getRandomString(i);
+        input = utils.basics.getRandomString(i);
         await uploadToSwarm(input);
         i += step;
     }
@@ -34,6 +34,6 @@ async function uploadStr({step = 1, maxStringSize = 5} = {}){
 (async function(){
     await swarm.configPostageBatch();
     await uploadStr({ step: 2});
-    let hashes = utils.getIdentifiers('swarm');
+    let hashes = utils.dfs.getIdentifiers('swarm');
     await swarm.retrieveAllTexts(hashes);
 })();

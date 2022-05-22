@@ -16,19 +16,19 @@ async function uploadToIPFS(input){
 async function uploadStrings({clearRepo = false, start = 4, step = 4, maxStringSize = 16384} = {}){
 
     if(clearRepo) await ipfs.clearRepo();
-    await utils.sleep(2)
+    await utils.basics.sleep(2)
 
     let i = start * 1024;
     maxStringSize *= 1024;
     while(true){
         let input;
         if(i >= maxStringSize) {
-            input = utils.getRandomString(maxStringSize);
+            input = utils.basics.getRandomString(maxStringSize);
             await uploadToIPFS(input);
             break;
         }
         
-        input = utils.getRandomString(i);
+        input = utils.basics.getRandomString(i);
         await uploadToIPFS(input);
         i *= step;
     }
@@ -47,7 +47,7 @@ async function loopUpload(times){
 //     await loopUpload(20);
 
 //     // retrieve
-//     let cids = utils.getIdentifiers('ipfs');
+//     let cids = utils.dfs.getIdentifiers('ipfs');
 //     await ipfs.retrieveAllTexts(cids, 20);
 // })();
 
