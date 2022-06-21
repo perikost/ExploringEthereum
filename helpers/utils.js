@@ -13,7 +13,7 @@ const { CID } = require('multiformats/cid');
 const assert = require('assert');
 
 
-const basics = {
+const core = {
     sleep(sec) {
         let ms = sec*1000;
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -81,6 +81,25 @@ const basics = {
     getRandomBytes(length){
         let str = this.getRandomString(length);
         return web3.utils.toHex(str);
+    },
+
+    getRandomStrings({start = 1, maxStringSize = 16384, step = 2, stepOp = '*'} = {}){
+        let randomStrings = [];
+        let i = start;
+        while(true){
+            let input;
+            if(i >= maxStringSize) {
+                input = this.getRandomString(maxStringSize);
+                randomStrings.push(input);
+                break;
+            }
+            
+            input = this.getRandomString(i);
+            randomStrings.push(input);
+            if (stepOp == '+') i += step;
+            if (stepOp == '*') i *= step;
+        }
+        return randomStrings;
     }
 }
 
@@ -117,33 +136,14 @@ const blockchain = {
     getRandomInput(arg){
         if(arg.length){
             let funcName = arg.type.charAt(0).toUpperCase() + arg.type.slice(1);
-            return basics['getRandom' + funcName](arg.length);
+            return core['getRandom' + funcName](arg.length);
         }else{
             let temp = arg.type.split(/(\d+)/);
             let funcName = temp[0].charAt(0).toUpperCase() + temp[0].slice(1);
             let length = temp[1];
     
-            return basics['getRandom' + funcName](length);
+            return core['getRandom' + funcName](length);
         }
-    },
-
-    getRandomStrings(start = 1, maxStringSize = 16384, step = 2, stepOp = '*'){
-        let randomStrings = [];
-        let i = start;
-        while(true){
-            let input;
-            if(i >= maxStringSize) {
-                input = basics.getRandomString(maxStringSize);
-                randomStrings.push(input);
-                break;
-            }
-            
-            input = basics.getRandomString(i);
-            randomStrings.push(input);
-            if (stepOp == '+') i += step;
-            if (stepOp == '*') i *= step;
-        }
-        return randomStrings;
     },
 
     isEmpty(input){
@@ -231,7 +231,7 @@ const csv = {
 }
 
 module.exports = {
-    basics: basics,
+    core: core,
     blockchain: blockchain,
     dfs: dfs,
     csv: csv,

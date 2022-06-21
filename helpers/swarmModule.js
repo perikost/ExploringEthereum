@@ -48,7 +48,7 @@ async function _uploadText(data, keepStats=true){
         let uploadTime = (performance.now() - begin).toFixed(4);
         let hash = result.reference;
 
-        let info = utils.basics.type(data);
+        let info = utils.core.type(data);
         let toWrite = {
             basic: [Date().slice(0,24), hash, uploadTime],
             inputInfo: info
@@ -56,7 +56,7 @@ async function _uploadText(data, keepStats=true){
 
         if(keepStats) csvObject.writeStats(toWrite, 'swarm', 'upload', `string_${data.length / 1024}kB`);
 
-        await utils.basics.sleep(2);
+        await utils.core.sleep(2);
         return hash;
     }catch(err){
         console.log(err);
@@ -74,7 +74,7 @@ async function retrieveText(hash, keepStats=true){
         retrievalTime = (performance.now() - begin).toFixed(4);
 
         data = new TextDecoder("utf-8").decode(data);
-        let info = utils.basics.type(data);
+        let info = utils.core.type(data);
         let toWrite = {
             basic: [Date().slice(0,24), retrievalTime],
             inputInfo: info
@@ -82,7 +82,7 @@ async function retrieveText(hash, keepStats=true){
         
         if(keepStats) csvObject.writeStats(toWrite, 'swarm', 'retrieve', `string_${data.length / 1024}kB`);
         
-        await utils.basics.sleep(2);
+        await utils.core.sleep(2);
     }catch(err){
         console.log(err);
         process.exit();
@@ -92,7 +92,7 @@ async function retrieveText(hash, keepStats=true){
 async function _retrieveAllTexts(hashes, times = 1, clearCache = true){
     for(let i = 0; i < times; i++){
         for(const hash of hashes){
-            if(clearCache) utils.basics.clearCache();
+            if(clearCache) utils.core.clearCache();
             await retrieveText(hash);
         }
     }

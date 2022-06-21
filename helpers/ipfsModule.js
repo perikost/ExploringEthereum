@@ -54,7 +54,7 @@ async function _uploadText(data, {wrapWithDirectory = false, keepStats = true} =
         //const cid = await ipfs.object.put(obj)
         //UPLOAD AS OBJECT
 
-        let info = utils.basics.type(data);
+        let info = utils.core.type(data);
         let toWrite = {
             basic: [Date().slice(0,24), uploaded.cid, uploadTime, uploaded.size],
             inputInfo: info
@@ -62,7 +62,7 @@ async function _uploadText(data, {wrapWithDirectory = false, keepStats = true} =
 
         if(keepStats) csvObject.writeStats(toWrite, 'ipfs', 'upload', `string_${data.length / 1024}kB`);
 
-        await utils.basics.sleep(1);
+        await utils.core.sleep(1);
         return uploaded.cid;
     }catch(err){
         console.log(err);
@@ -91,7 +91,7 @@ async function retrieveText(cid, keepStats = true){
         // TODO: find out why commas are inserted
         let data = chunks.toString().replaceAll(',', '');
 
-        let info = utils.basics.type(data);
+        let info = utils.core.type(data);
         let toWrite = {
             basic: [Date().slice(0,24), executionTime, objectStats.CumulativeSize],
             inputInfo: info
@@ -100,7 +100,7 @@ async function retrieveText(cid, keepStats = true){
         if(keepStats) csvObject.writeStats(toWrite, 'ipfs', 'retrieve', `string_${data.length / 1024}kB`);
 
         console.log(data.substring(0,10));
-        await utils.basics.sleep(1);
+        await utils.core.sleep(1);
     }catch(err){
         console.log(err);
         // process.exit();
@@ -112,7 +112,7 @@ async function _retrieveAllTexts(cids, times=1, keepStats = true, clearCache = t
     
     for(let i = 0; i < times; i++){
         for(const cid of cids){
-            if(clearCache) utils.basics.clearCache();
+            if(clearCache) utils.core.clearCache();
             if(localCids.includes(cid)) await retrieveText(cid, keepStats);
         }
     }

@@ -40,13 +40,13 @@ async function loopRetrieval(options){
 }
 
 
-// uncomment to run the experiments
+/* // uncomment to run the experiments
 blockchain.loadBlockchain();
 loopRetrieval({
     times : 20,
     idsCounter : 15,
     retrieveTxData : true,
-});
+}); */
 
 // uncomment to compute average retrieval latency of a folder's csv records
 // csv.average('csv_records/24-03-2022/Contracts')

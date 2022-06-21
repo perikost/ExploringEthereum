@@ -56,7 +56,7 @@ module.exports = class TransactionDebugger {
         if(!fs.existsSync(folderPath)) fs.mkdirSync(folderPath, { recursive: true });
     
         let filePath = path.join(folderPath, `${fileName}.json`);
-        if(fs.existsSync(filePath)) await utils.basics.sleep(1);  // TODO: This is a slopy fix. Improve
+        if(fs.existsSync(filePath)) await utils.core.sleep(1);  // TODO: This is a slopy fix. Improve
         fs.writeFileSync(filePath, JSON.stringify(info, null, 4));
     }
 
@@ -79,7 +79,7 @@ module.exports = class TransactionDebugger {
         for(const file of tempContens){
             if(file.startsWith(traceFileName)){
                 let tracePath = path.join('/tmp', file);
-                let trace = utils.basics.parseJsonl(tracePath);
+                let trace = utils.core.parseJsonl(tracePath);
                 trace = this.convertGasToNumber(trace);
 
                 this.debuggedTx = {};
