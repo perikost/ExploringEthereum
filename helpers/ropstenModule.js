@@ -1,94 +1,94 @@
 require('dotenv').config();
 const csv = require('./csvModule.js');  //normal
-const CSV = require('./csvClassModule.js').CSV;  //class
+const { CSV } = require('./csvClassModule.js');  //class
 const TransactionDebugger = require('./debugger.js');
 const utils = require('./utils.js');
 const performance = require('perf_hooks').performance;
 const ethereumTx = require('ethereumjs-tx').Transaction;
 const Web3 = require('web3');
-const { env, exit } = require('process');
 
 // general TODO:
-// 1) initiallize all csv objects outside the for loops of the functions and pass each
-// function's name in csv.write, not in new CSV('blockchain', 'retrieveStorage', name, formattedCon.name);
-// 2) in every forEach print error if not found
-// 3) update web3 to latest version
-// 4) assign "named parameters" in most  functions (e.g., {values = [],  keepStats = true} = {})
-// 5) if result is null in retrieval throw error
+// - in every forEach print error if not found
+// - if result is null in retrieval throw error
 
 var web3;
 var con;
 var formattedCon;
-var signMethod;
-var fork; 
 var csvObject;
 var txDebugger;
-var useAccessList;
 var errors = 0;
-var fromContractCreation;
-var clearCache;
 
-// TODO: maybe make capitalize the vars above to be able to tell them apart easily
+const options = {
+    // testnet: 'ropsten',
+    // signMethod can be 1) 'web3' -> to sign using Web3
+    //  2) anything else ->  to sign using ethereumjs-tx
+    signMethod: 'web3', 
+    fork: 'london', 
+    keepStats: false,
+    transactionPollingTimeout: 3600*2
+};
 
-function _loadBlockchain({provider = 'localhost',  signMeth = 'web3', accessList= true, hardFork = 'london', cache = true} = {}){ 
-    // TODO: improve
-    if(provider != 'localhost') provider = `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`;
+const defaultFunctionOptions = {
+    useAccessList: false, 
+    clearCache: false,
+    debug : false,
+    fromConCreation: false,
+    keepStats: false
+};
+
+
+function loadBlockchain(provider = 'localhost', opts = null){ 
+    utils.core.setOptions(opts, options);
+    if(provider === 'infura' && process.env.INFURA_ENDPOINT) provider = process.env.INFURA_ENDPOINT;
     else provider = 'http://localhost:8545'
 
     web3 = new Web3(new Web3.providers.HttpProvider(provider));
-    signMethod = signMeth;
-    fork = hardFork;
-    csvObject = new CSV();
+
+    // increase wait-time for a transaction to be mined to avoid timeouts
+    web3.eth.transactionPollingTimeout = options.transactionPollingTimeout;
+    console.log('Max wait-time for transaction to be mined: ', web3.eth.transactionPollingTimeout / 60, 'mins');
+
+    // to avoid creating a csv object and configure its path when we don't plan to keepStats at all
+    if(options.keepStats) csvObject = new CSV();
     txDebugger = new TransactionDebugger(web3);
-    useAccessList = accessList;
-    clearCache = cache;
     
     return web3;
 }
 
-function _config(contract, signMeth = 'web3', fromConCreation = false){  
-    // signMethod can be 1) 'web3' -> to sign using Web3
-    //  2) anything else ->  to sign using ethereumjs-tx
-
+function config(contract, opts = null){
     if(contract){  // no need to load contract if intending to call sendData()
         formattedCon = contract;
-        signMethod = signMeth;
+        formattedCon.options = utils.core.getOptions(opts, defaultFunctionOptions);
         con = new web3.eth.Contract(formattedCon.abi, formattedCon.contractAddress);
-        fromContractCreation = fromConCreation;
     } 
-
-    web3.eth.transactionPollingTimeout = 3600*2; //set waiting time for a transaction to be mined to 2 hours
-    console.log('Max await time for transaction to be mined', web3.eth.transactionPollingTimeout / 60, 'mins');
 }
 
 
 // TODO: maybe merge sendData, fallback together and pass destination address as input
-async function _sendData(input, keepStats = true) {
+async function sendData(input, opts = null) {
+    let localOptions = utils.core.getOptions(opts, defaultFunctionOptions);
+
     let message = web3.utils.toHex(input);
     let result = await send(message, process.env.MY_ADDRESS);
 
     let executionTime = result.executionTime;
     let txHash = result.txReceipt.transactionHash;
     let cost = result.txReceipt.gasUsed;
-    let info = type(input);
+    let info = utils.core.type(input);
 
     let toWrite = {
         basic: [txHash, Date().slice(0,24), cost, executionTime],
         inputInfo: info
     };
 
-    if(keepStats){
-        // class
-        csvObject.writeStats(toWrite, 'blockchain', 'execute', 'send_data');
-
-        // normal
-        // csv.write(toWrite, 'blockchain', 'execute', 'send_data');
-    }
+    if(localOptions.keepStats && options.keepStats) csvObject.writeStats(toWrite, 'blockchain', 'execute', 'send_data');
 }
 
 
-async function _fallback(input, id = null, keepStats = true){
+async function fallback(input, id = null, opts = null){
     if(!formattedCon.fallback) return;  //this contract doesn't have a fallback, so return
+
+    let localOptions = utils.core.getOptions(opts, formattedCon.options);
 
     let message = web3.utils.toHex(input);
     if(id !== null){
@@ -102,22 +102,20 @@ async function _fallback(input, id = null, keepStats = true){
     let executionTime = result.executionTime;
     let txHash = result.txReceipt.transactionHash;
     let cost = result.txReceipt.gasUsed;
-    let info = type(input);
+    let info = utils.core.type(input);
 
     let toWrite = {
         basic: [txHash, Date().slice(0,24), cost, executionTime],
         inputInfo: info
     };
 
-    if(keepStats){
-        // class
+    if(localOptions.keepStats && options.keepStats){
         let folderPath = csvObject.writeStats(toWrite, 'blockchain', 'execute', 'fallback', formattedCon.name);
 
-        // normal
-        // csv.write(toWrite, 'blockchain', 'execute', 'fallback', formattedCon.name);
-
-        // await txDebugger.debugTransaction(txHash);
-        // await txDebugger.saveDebuggedTransaction(message, null, folderPath, Date().slice(0,24).replaceAll(' ', '_'))
+        if(localOptions.debug){
+            await txDebugger.debugTransaction(txHash);
+            await txDebugger.saveDebuggedTransaction(message, null, folderPath, Date().slice(0,24).replaceAll(' ', '_'))
+        } 
     }
 }
 
@@ -133,7 +131,7 @@ async function getGaspriceBasedOnHistory(){
 }
 
 // TODO: split in two: send, sign with web3, sign with ethereumjs
-async function send(input, account, accessList){
+async function send(input, account, accessList = null){
     try{
         let nodeVersion = await web3.eth.getNodeInfo();
         console.log('Node version:', nodeVersion);
@@ -144,7 +142,7 @@ async function send(input, account, accessList){
         let nonce = await web3.eth.getTransactionCount(process.env.MY_ADDRESS);
         let gasprice = await getGaspriceBasedOnHistory(); // TODO: Should make it work in localhost mode as well where getFeeHistory() isn't available
 
-        if(signMethod == 'web3'){
+        if(options.signMethod == 'web3'){
             var rawTx = {
                  nonce: nonce,
                  to: accountTo,
@@ -153,7 +151,7 @@ async function send(input, account, accessList){
                  data: input,
                  accessList: accessList,
                  chain: 'ropsten',
-                 hardfork: fork
+                 hardfork: options.fork
             };
         }else{
             var rawTx = {
@@ -169,13 +167,13 @@ async function send(input, account, accessList){
         let gasToSend = 10000 * Math.ceil(gasEstimate / 10000);
         console.log('Estimated gas:',gasEstimate);
 
-        if(signMethod == 'web3'){
+        if(options.signMethod == 'web3'){
             rawTx.gas = gasToSend;
             let signed_tx = await web3.eth.accounts.signTransaction(rawTx, process.env.MY_PRIVATE_KEY);
             var transaction = signed_tx.rawTransaction
         }else{
             rawTx.gasLimit = web3.utils.toHex(gasToSend);
-            let tx = new ethereumTx(rawTx, {'chain':'ropsten', hardfork: fork});
+            let tx = new ethereumTx(rawTx, {'chain':'ropsten', hardfork: options.fork});
             tx.sign(Buffer.from(process.env.MY_PRIVATE_KEY, 'hex'));
 
             let serializedTx = tx.serialize();
@@ -199,11 +197,11 @@ async function send(input, account, accessList){
 }
 
 
-async function executeFunction(name, {values = [], keepStats = true} = {}){
+async function executeFunction(name, values = [], opts = null){
     try{
         // if no values are given, get the harcoded values or generate random ones
         if(values.length == 0){
-            let func = getFunction(name);
+            let func = _getFunction(name);
             if(!func){
                 // if no such function is found return;
                 return;
@@ -220,30 +218,31 @@ async function executeFunction(name, {values = [], keepStats = true} = {}){
             });
         }
         
+        let localOptions = utils.core.getOptions(opts, formattedCon.options);
+
         let message = con.methods[name].apply(null, values).encodeABI();
-        let accessList = useAccessList ? await con.methods[name].apply(null, values).createAccessList({from: process.env.MY_ADDRESS}): null;
+        let accessList = localOptions.useAccessList ? await con.methods[name].apply(null, values).createAccessList({from: process.env.MY_ADDRESS}): null;
         if(accessList) accessList = accessList.accessList;
         // Contract's address is included even though it is not used in any EXT* operation, resulting in 2400 extra
         let result = await send(message, null, accessList);
         
-        if(keepStats){
+        if(localOptions.keepStats && options.keepStats){
             let executionTime = result.executionTime;
             let txHash = result.txReceipt.transactionHash;
             let cost = result.txReceipt.gasUsed;
 
-            let info = type(values);
+            let info = utils.core.type(values);
             let toWrite = {
                 basic: [txHash, Date().slice(0,24), cost, executionTime],
                 inputInfo: info
             };
         
-            // class
             let folderPath = csvObject.writeStats(toWrite, 'blockchain', 'execute', name, formattedCon.name);
 
-            // await txDebugger.debugTransaction(txHash);
-            // await txDebugger.saveDebuggedTransaction(message, accessList, folderPath + `/${name}`, Date().slice(0,24).replaceAll(' ', '_'))
-            // normal
-            // csv.write(toWrite, 'blockchain', 'execute', name, formattedCon.name);
+            if(localOptions.debug){
+                await txDebugger.debugTransaction(txHash);
+                await txDebugger.saveDebuggedTransaction(message, null, folderPath, Date().slice(0,24).replaceAll(' ', '_'))
+            } 
         }
 
     }catch(error){
@@ -253,30 +252,32 @@ async function executeFunction(name, {values = [], keepStats = true} = {}){
 }
 
 
-async function _executeFunctions(values = [], keepStats = true){
+async function executeFunctions(values = [], opts = null){
     if(formattedCon.functions.length == 0) return; //this contract doesn't have functions, so return
 
     for(var func of formattedCon.functions){
         if(!func.execute) continue; // don't execute the function
 
         let name = func.name;
-        await executeFunction(name, {values: values, keepStats: keepStats});
+        await executeFunction(name, values, opts);
     }
 }
 
-async function _executeSpecificFunctions(functions = {}, keepStats = true){
+async function executeSpecificFunctions(functions = {}, opts){
     if(formattedCon.functions.length == 0 || Object.values(functions).length == 0) return; //there are no functions to execute, so return
 
     for(const [func, vals] of Object.entries(functions)){
-        await executeFunction(func, {values: vals, keepStats: keepStats});
+        await executeFunction(func, vals, opts);
     }
 }
 
-async function executeGetter(name, {values = [],  keepStats = true} = {}){
+async function executeGetter(name, values = [],  opts = null){
     try{
         // if no values are given, get the harcoded values or generate random ones
         if(values.length == 0){
-            let getter = getGetter(name);
+            let getter = _getGetter(name);
+            // if no such getter is found return; 
+            if(!getter) return;
 
             getter.inputs.forEach(input => {
                 if(Object.keys(input).length != 0){
@@ -289,21 +290,18 @@ async function executeGetter(name, {values = [],  keepStats = true} = {}){
             });
         }
 
+        let localOptions = utils.core.getOptions(opts, formattedCon.options);
         let begin = performance.now();
         let result = await con.methods[name].apply(null, values).call();
         let retrievalTime = (performance.now() - begin).toFixed(4);
 
-        if(keepStats){
+        if(localOptions.keepStats && options.keepStats){
             let toWrite = {
                 basic: [Date().slice(0,24), retrievalTime],
-                inputInfo: type(result)
+                inputInfo: utils.core.type(result)
             };
 
-            //class
             csvObject.writeStats(toWrite, 'blockchain', 'retrieveStorage', name, formattedCon.name);
-
-            // normal
-            // csv.write(toWrite, 'blockchain', 'retrieveStorage', name, formattedCon.name);
         }
         return result;
 
@@ -315,20 +313,21 @@ async function executeGetter(name, {values = [],  keepStats = true} = {}){
 }
 
 
-async function _retrieveStorage(keepStats = true){
+async function retrieveStorage( opts = null){
     if(formattedCon.getters.length == 0) return;  // this contract doesn't have getters, so return;
+    let localOptions = utils.core.getOptions(opts, formattedCon.options);
 
     for(var getter of formattedCon.getters){
         if(!getter.execute) continue;  // don't execute the getter
-        if(clearCache) utils.core.clearCache();
+        if(localOptions.clearCache) utils.core.options.clearCache();
 
         let name = getter.name;
-        await executeGetter(name, {keepStats : keepStats});
+        await executeGetter(name, [], opts);
     }
 
 }
 
-async function _isStorageDirty(getters){
+async function isStorageDirty(getters){
     for(const getter of getters){
         let result = await executeGetter(getter, {keepStats: false});
         if(!result) continue;
@@ -346,12 +345,14 @@ async function _isStorageDirty(getters){
 // 2) The same for index
 // 3) Fill in paramType automatically
 
-async function _retrieveEvents(keepStats = true){
+async function retrieveEvents(opts = null){
     if(formattedCon.events.length == 0) return;
+
+    let localOptions = utils.core.getOptions(opts, formattedCon.options);
 
     for(var eve of formattedCon.events){
         if(!eve.retrieve) continue; // don't retrieve the Event
-        if(clearCache) utils.core.clearCache();
+        if(localOptions.clearCache) utils.core.options.clearCache();
 
         try{
             let name = eve.name;
@@ -389,21 +390,17 @@ async function _retrieveEvents(keepStats = true){
                 }
             }
 
-            if(keepStats){
+            if(localOptions.keepStats && options.keepStats){
                 if(!result) continue;
                 var totalTime = Number(allEventsRetrieval) + Number(findSpecificEvent) + Number(decodingTime);
                 let id = ',';
                 if(indexName == 'id') id = indexValue;
                 let toWrite = {
                     basic: [Date().slice(0,24), results.length, id, allEventsRetrieval, findSpecificEvent, decodingTime, totalTime],
-                    inputInfo: type(result)
+                    inputInfo: utils.core.type(result)
                 };
 
-                //class
                 csvObject.writeStats(toWrite, 'blockchain', 'retrieve_Events', name, formattedCon.name);
-
-                // normal
-                // csv.write(toWrite, 'blockchain', 'retrieve_Events', name, formattedCon.name);
             }
 
 
@@ -419,12 +416,14 @@ async function _retrieveEvents(keepStats = true){
 }
 
 
-async function _retrieveIndexedEvents(keepStats = true){
+async function retrieveIndexedEvents(opts = null){
     if(formattedCon.indexedEvents.length == 0) return;
+
+    let localOptions = utils.core.getOptions(opts, formattedCon.options);
 
     for(var eve of formattedCon.indexedEvents){
         if(!eve.retrieve) continue; // don't retrieve the Event
-        if(clearCache) utils.core.clearCache();
+        if(localOptions.clearCache) utils.core.options.clearCache();
 
         try{
 
@@ -461,7 +460,7 @@ async function _retrieveIndexedEvents(keepStats = true){
             }
 
 
-            if(keepStats){
+            if(localOptions.keepStats && options.keepStats){
                 if(!result) continue;
                 var totalTime = Number(retrievalTime) + Number(decodingTime);
                 let id = ',';
@@ -469,13 +468,10 @@ async function _retrieveIndexedEvents(keepStats = true){
 
                 let toWrite = {
                     basic: [Date().slice(0,24), numOfLogs, id, retrievalTime, decodingTime, totalTime],
-                    inputInfo: type(result)
+                    inputInfo: utils.core.type(result)
                 };
-                //class
-                csvObject.writeStats(toWrite, 'blockchain', 'retrieve_Indexed_Events', name, formattedCon.name);
 
-                // normal
-                // csv.write(toWrite, 'blockchain', 'retrieve_Indexed_Events', name, formattedCon.name);
+                csvObject.writeStats(toWrite, 'blockchain', 'retrieve_Indexed_Events', name, formattedCon.name);
             }
 
 
@@ -492,12 +488,14 @@ async function _retrieveIndexedEvents(keepStats = true){
 }
 
 
-async function _retrieveAnonymousEvents(keepStats = true) {
+async function retrieveAnonymousEvents(opts = null) {
     if(formattedCon.anonymousEvents.length == 0) return;
+
+    let localOptions = utils.core.getOptions(opts, formattedCon.options);
 
     for(var eve of formattedCon.anonymousEvents){
         if(!eve.retrieve) continue; // don't retrieve the Event
-        if(clearCache) utils.core.clearCache();
+        if(localOptions.clearCache) utils.core.options.clearCache();
 
         try {
             let numOfLogs;
@@ -570,7 +568,7 @@ async function _retrieveAnonymousEvents(keepStats = true) {
             } 
             result = result[toFind]; // neeeded because the output of decodeLog is something like : Result { '0': 's', __length__: 1, data: 's' }
 
-            if(keepStats){
+            if(localOptions.keepStats && options.keepStats){
                 if(!result) continue;
                 var totalTime = Number(retrievalTime) + Number(decodingTime);
                 let id = ',';
@@ -578,13 +576,10 @@ async function _retrieveAnonymousEvents(keepStats = true) {
 
                 let toWrite = {
                     basic: [Date().slice(0,24), numOfLogs || 0, id, retrievalTime, decodingTime, totalTime],
-                    inputInfo: type(result)
+                    inputInfo: utils.core.type(result)
                 };
-                //class
-                csvObject.writeStats(toWrite, 'blockchain', 'retrieve_Anonymous_Events', name, formattedCon.name);
 
-                // normal
-                // csv.write(toWrite, 'blockchain', 'retrieve_Anonymous_Events', name, formattedCon.name);
+                csvObject.writeStats(toWrite, 'blockchain', 'retrieve_Anonymous_Events', name, formattedCon.name);
             }
 
 
@@ -601,7 +596,9 @@ async function _retrieveAnonymousEvents(keepStats = true) {
 }
 
 
-async function _retrievePlainTransactionData(path, keepStats = true) {
+async function retrievePlainTransactionData(path, opts = null) {
+    let localOptions = utils.core.getOptions(opts, formattedCon.options);
+
     let storedInTxData = [];
     csv.readCsvAsArray(path).forEach((line, i) => {
         if(i != 0) storedInTxData.push(line[0])
@@ -611,25 +608,17 @@ async function _retrievePlainTransactionData(path, keepStats = true) {
     name = name.split('.')[0]
 
     for(const txHash of storedInTxData){
-        if(clearCache) utils.core.clearCache();
+        if(localOptions.clearCache) utils.core.options.clearCache();
         try {
-            // let begin = performance.now();
             let result = await retrieveTxData(txHash);
-            // let retrievalTime = (performance.now() - begin).toFixed(4);
 
-            let toWrite = {
-                basic: [Date().slice(0,24), result.retrievalTime],
-                inputInfo: type(result.decodedInput)
-            };
-    
+            if(localOptions.keepStats && options.keepStats){
+                let toWrite = {
+                    basic: [Date().slice(0,24), result.retrievalTime],
+                    inputInfo: utils.core.type(result.decodedInput)
+                };
 
-            if(keepStats){
-                //class
-                // let csvObject = new CSV('blockchain', 'retrieve_txData', name);
                 csvObject.writeStats(toWrite, 'blockchain', 'retrieve_txData', name);
-
-                // normal
-                // csv.write(toWrite, 'blockchain', 'retrieve_txData', name);
             }
             console.log(`Retrieval time (txData) : `, result.retrievalTime, 'Result: ', result.decodedInput.length);
             console.log(result.decodedInput.length > 10? result.decodedInput.substring(0,10) : result.decodedInput);
@@ -676,32 +665,13 @@ async function retrieveUnused(txHash, type) {
     return result['_data'];
 }
 
-
-function type(values){
-    if(typeof(values) !== 'object') values = [values]
-    if(!values) return {type : 'No values', size : 'No values'};
-
-    let info = values.map(val => {
-        if(typeof(val) != 'string') return {type : typeof(val), size : 'Not measured'};
-        if( val.slice(0,2) == '0x'){ //could also use web3.utils.isHexStrict()
-            let length = val.slice(2).length / 2;
-            if( length == 32) return {type : 'Bytes32', size : length};
-            return {type : 'Bytes', size : length};
-        }
-        let length = val.length;
-        return {type : typeof(val), size : length};
-    });
-    return info;
-}
-
-
-function getFunction(name){
+function _getFunction(name){
     for(const func of formattedCon.functions){
         if(name == func.name) return func;
     }
 }
 
-function getGetter(name){
+function _getGetter(name){
     for(const getter of formattedCon.getters){
         if(name == getter.name) return getter;
     }
@@ -709,18 +679,18 @@ function getGetter(name){
 
 
 module.exports = {
-    loadBlockchain : _loadBlockchain,
-    config : _config,
-    executeFunctions : _executeFunctions,
-    sendData : _sendData,
-    fallback : _fallback,
-    retrieveStorage : _retrieveStorage,
-    retrieveEvents : _retrieveEvents,
-    retrieveIndexedEvents : _retrieveIndexedEvents,
-    retrieveAnonymousEvents : _retrieveAnonymousEvents,
-    retrievePlainTransactionData : _retrievePlainTransactionData,
-    executeFunction : executeFunction,
-    executeGetter: executeGetter,
-    isStorageDirty: _isStorageDirty,
-    executeSpecificFunctions: _executeSpecificFunctions
+    loadBlockchain,
+    config,
+    executeFunctions,
+    sendData,
+    fallback,
+    retrieveStorage,
+    retrieveEvents,
+    retrieveIndexedEvents,
+    retrieveAnonymousEvents,
+    retrievePlainTransactionData,
+    executeFunction,
+    executeGetter,
+    isStorageDirty,
+    executeSpecificFunctions
 };
