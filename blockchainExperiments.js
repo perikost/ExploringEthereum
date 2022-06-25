@@ -15,13 +15,12 @@ async function execute(input, reset){
 
 async function loopExecution({loops = 1,  executionType = 'functions', reset = false, startingID = 0} = {}) {
     if(executionType == 'send_data'){
-        blockchain.config();
         for(const value of utils.core.getRandomStrings()){
             await blockchain.sendData(value);
         }
     }else{
         for(const con of contracts){
-            blockchain.config(con);
+            blockchain.config(con, {keepStats: true});
             for(let [index, value] of utils.core.getRandomStrings().entries()){
                 for (var i = 0; i < loops; i++) {
                     if(loops > 1) {value = utils.core.getRandomString(value.length)};
@@ -56,7 +55,7 @@ async function executeRest() {
 
 
 /* // uncomment to run the experiments
-blockchain.loadBlockchain({accessList: true});
+blockchain.loadBlockchain('infura', {keepStats: true});
 (async () => {
     await executeStorageContract();
     await executeRest();

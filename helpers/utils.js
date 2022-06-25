@@ -14,6 +14,20 @@ const assert = require('assert');
 
 
 const core = {
+    setOptions(opts, targetOpts) {
+        if(!opts || typeof opts !== 'object' || Object.keys(opts).length === 0) return;
+        for(const opt in targetOpts) if(opts.hasOwnProperty(opt)) targetOpts[opt] = opts[opt];
+    },
+    
+    getOptions(opts, sourceOpts) {
+        if(!opts || typeof opts !== 'object' || Object.keys(opts).length === 0) return JSON.parse(JSON.stringify(sourceOpts));
+        let options = {};
+    
+        for (const opt in sourceOpts) options[opt] = opts.hasOwnProperty(opt) ? opts[opt] : sourceOpts[opt];
+    
+        return options;
+    },
+
     sleep(sec) {
         let ms = sec*1000;
         return new Promise(resolve => setTimeout(resolve, ms));
