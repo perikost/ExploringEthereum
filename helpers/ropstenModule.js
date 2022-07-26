@@ -4,7 +4,6 @@ const { CSV } = require('./csvClassModule.js');  //class
 const TransactionDebugger = require('./debugger.js');
 const utils = require('./utils.js');
 const performance = require('perf_hooks').performance;
-const ethereumTx = require('ethereumjs-tx').Transaction;
 const Web3 = require('web3');
 
 // general TODO:
@@ -20,9 +19,6 @@ var errors = 0;
 
 const options = {
     // testnet: 'ropsten',
-    // signMethod can be 1) 'web3' -> to sign using Web3
-    //  2) anything else ->  to sign using ethereumjs-tx
-    signMethod: 'web3', 
     fork: 'london', 
     keepStats: false,
     transactionPollingTimeout: 3600*2
@@ -130,55 +126,34 @@ async function getGaspriceBasedOnHistory(){
     return Math.ceil(wei);
 }
 
-// TODO: split in two: send, sign with web3, sign with ethereumjs
 async function send(input, account, accessList = null){
     try{
+        // print node's version
         let nodeVersion = await web3.eth.getNodeInfo();
         console.log('Node version:', nodeVersion);
 
-        let accountTo
-        if(formattedCon) accountTo = formattedCon.contractAddress;
-        if(account) accountTo = account;
+        let accountTo = formattedCon ? formattedCon.contractAddress : account;
         let nonce = await web3.eth.getTransactionCount(process.env.MY_ADDRESS);
         let gasprice = await getGaspriceBasedOnHistory(); // TODO: Should make it work in localhost mode as well where getFeeHistory() isn't available
 
-        if(options.signMethod == 'web3'){
-            var rawTx = {
-                 nonce: nonce,
-                 to: accountTo,
-                 gasPrice : gasprice,
-                 value: 0,
-                 data: input,
-                 accessList: accessList,
-                 chain: 'ropsten',
-                 hardfork: options.fork
-            };
-        }else{
-            var rawTx = {
-                nonce: web3.utils.toHex(nonce),
-                gasPrice: web3.utils.toHex(gasprice),
-                to: accountTo,
-                value: web3.utils.toHex(0),
-                data: input
-            };
-        }
+        let rawTx = {
+             nonce: nonce,
+             to: accountTo,
+             gasPrice : gasprice,
+             value: 0,
+             data: input,
+             accessList: accessList,
+             chain: 'ropsten',
+             hardfork: options.fork
+        };
 
         let gasEstimate = await web3.eth.estimateGas(rawTx);
         let gasToSend = 10000 * Math.ceil(gasEstimate / 10000);
         console.log('Estimated gas:',gasEstimate);
 
-        if(options.signMethod == 'web3'){
-            rawTx.gas = gasToSend;
-            let signed_tx = await web3.eth.accounts.signTransaction(rawTx, process.env.MY_PRIVATE_KEY);
-            var transaction = signed_tx.rawTransaction
-        }else{
-            rawTx.gasLimit = web3.utils.toHex(gasToSend);
-            let tx = new ethereumTx(rawTx, {'chain':'ropsten', hardfork: options.fork});
-            tx.sign(Buffer.from(process.env.MY_PRIVATE_KEY, 'hex'));
-
-            let serializedTx = tx.serialize();
-            var transaction = '0x' + serializedTx.toString('hex');
-        }
+        rawTx.gas = gasToSend;
+        let signed_tx = await web3.eth.accounts.signTransaction(rawTx, process.env.MY_PRIVATE_KEY);
+        let transaction = signed_tx.rawTransaction;
 
         console.log('Waiting for transaction to be mined...');
 
