@@ -6,10 +6,6 @@ const utils = require('./utils.js');
 const performance = require('perf_hooks').performance;
 const Web3 = require('web3');
 
-// general TODO:
-// - in every forEach print error if not found
-// - if result is null in retrieval throw error
-
 var web3;
 var con;
 var formattedCon;
@@ -59,53 +55,45 @@ function config(contract, opts = null){
     } 
 }
 
-
-// TODO: maybe merge sendData, fallback together and pass destination address as input
 async function sendData(input, opts = null) {
     let localOptions = utils.core.getOptions(opts, defaultFunctionOptions);
-
     let message = web3.utils.toHex(input);
     let result = await send(message, process.env.MY_ADDRESS);
 
-    let executionTime = result.executionTime;
-    let txHash = result.txReceipt.transactionHash;
-    let cost = result.txReceipt.gasUsed;
-    let info = utils.core.type(input);
-
-    let toWrite = {
-        basic: [txHash, Date().slice(0,24), cost, executionTime],
-        inputInfo: info
-    };
-
-    if(localOptions.keepStats && options.keepStats) csvObject.writeStats(toWrite, 'blockchain', 'execute', 'send_data');
+    if(localOptions.keepStats && options.keepStats) {
+        let toWrite = {
+            basic: [result.txHash, Date().slice(0,24), result.gasUsed, result.executionTime],
+            inputInfo: info
+        };
+        csvObject.writeStats(toWrite, 'blockchain', 'execute', 'send_data');
+    }
 }
-
 
 async function fallback(input, id = null, opts = null){
     if(!formattedCon.fallback) return;  //this contract doesn't have a fallback, so return
 
     let localOptions = utils.core.getOptions(opts, formattedCon.options);
-
     let message = web3.utils.toHex(input);
+    /* 
+    this is for a specific use-case
+    the id is padded to 32 bytes and then is concatenated with the message
+    the fallback function of the Smart Contract splits the msg.data 
+    and passes the id to an event, as follows:
+         uint _id = uint(bytes32(msg.data[0:32]));
+         emit logFallback(_id); 
+    */
     if(id !== null){
         id = web3.utils.toHex(id);
         id = web3.utils.padLeft(id, 64);
         message = id + web3.utils.stripHexPrefix(message);
     }
-
     let result = await send(message);
-    
-    let executionTime = result.executionTime;
-    let txHash = result.txReceipt.transactionHash;
-    let cost = result.txReceipt.gasUsed;
-    let info = utils.core.type(input);
-
-    let toWrite = {
-        basic: [txHash, Date().slice(0,24), cost, executionTime],
-        inputInfo: info
-    };
 
     if(localOptions.keepStats && options.keepStats){
+        let toWrite = {
+            basic: [result.txHash, Date().slice(0,24), result.gasUsed, result.executionTime],
+            inputInfo: info
+        };
         let folderPath = csvObject.writeStats(toWrite, 'blockchain', 'execute', 'fallback', formattedCon.name);
 
         if(localOptions.debug){
@@ -163,7 +151,8 @@ async function send(input, account, accessList = null){
 
         return {
             executionTime: executionTime,
-            txReceipt: txReceipt
+            txHash: txReceipt.transactionHash,
+            gasUsed: txReceipt.gasUsed
         };
     }catch(err){
         console.log('Transaction not completed. Error: ', err);
@@ -174,14 +163,12 @@ async function send(input, account, accessList = null){
 
 async function executeFunction(name, values = [], opts = null){
     try{
-        // if no values are given, get the harcoded values or generate random ones
-        if(values.length == 0){
-            let func = _getFunction(name);
-            if(!func){
-                // if no such function is found return;
-                return;
-            }
+        // if no function with such a name is found return;
+        let func = _getFunction(name);
+        if(!func) return;
 
+        // if no values are given, get the hardcoded values or generate random ones
+        if(values.length == 0){
             func.inputs.forEach(input => {
                 if(Object.keys(input).length != 0){
                     if(input.value){
@@ -202,16 +189,10 @@ async function executeFunction(name, values = [], opts = null){
         let result = await send(message, null, accessList);
         
         if(localOptions.keepStats && options.keepStats){
-            let executionTime = result.executionTime;
-            let txHash = result.txReceipt.transactionHash;
-            let cost = result.txReceipt.gasUsed;
-
-            let info = utils.core.type(values);
             let toWrite = {
-                basic: [txHash, Date().slice(0,24), cost, executionTime],
+                basic: [result.txHash, Date().slice(0,24), result.gasUsed, result.executionTime],
                 inputInfo: info
             };
-        
             let folderPath = csvObject.writeStats(toWrite, 'blockchain', 'execute', name, formattedCon.name);
 
             if(localOptions.debug){
@@ -241,19 +222,19 @@ async function executeFunctions(values = [], opts = null){
 async function executeSpecificFunctions(functions = {}, opts){
     if(formattedCon.functions.length == 0 || Object.values(functions).length == 0) return; //there are no functions to execute, so return
 
-    for(const [func, vals] of Object.entries(functions)){
-        await executeFunction(func, vals, opts);
+    for(const [func, values] of Object.entries(functions)){
+        await executeFunction(func, values, opts);
     }
 }
 
 async function executeGetter(name, values = [],  opts = null){
     try{
-        // if no values are given, get the harcoded values or generate random ones
-        if(values.length == 0){
-            let getter = _getGetter(name);
-            // if no such getter is found return; 
-            if(!getter) return;
+        // if no getter with such a name is found return;
+        let getter = _getGetter(name); 
+        if(!getter) return;
 
+        // if no values are given, get the hardcoded values or generate random ones
+        if(values.length == 0){
             getter.inputs.forEach(input => {
                 if(Object.keys(input).length != 0){
                     if(input.value){
@@ -275,7 +256,6 @@ async function executeGetter(name, values = [],  opts = null){
                 basic: [Date().slice(0,24), retrievalTime],
                 inputInfo: utils.core.type(result)
             };
-
             csvObject.writeStats(toWrite, 'blockchain', 'retrieveStorage', name, formattedCon.name);
         }
         return result;
@@ -294,7 +274,7 @@ async function retrieveStorage( opts = null){
 
     for(var getter of formattedCon.getters){
         if(!getter.execute) continue;  // don't execute the getter
-        if(localOptions.clearCache) utils.core.options.clearCache();
+        if(localOptions.clearCache) utils.core.clearCache();
 
         let name = getter.name;
         await executeGetter(name, [], opts);
@@ -327,7 +307,7 @@ async function retrieveEvents(opts = null){
 
     for(var eve of formattedCon.events){
         if(!eve.retrieve) continue; // don't retrieve the Event
-        if(localOptions.clearCache) utils.core.options.clearCache();
+        if(localOptions.clearCache) utils.core.clearCache();
 
         try{
             let name = eve.name;
@@ -398,7 +378,7 @@ async function retrieveIndexedEvents(opts = null){
 
     for(var eve of formattedCon.indexedEvents){
         if(!eve.retrieve) continue; // don't retrieve the Event
-        if(localOptions.clearCache) utils.core.options.clearCache();
+        if(localOptions.clearCache) utils.core.clearCache();
 
         try{
 
@@ -470,7 +450,7 @@ async function retrieveAnonymousEvents(opts = null) {
 
     for(var eve of formattedCon.anonymousEvents){
         if(!eve.retrieve) continue; // don't retrieve the Event
-        if(localOptions.clearCache) utils.core.options.clearCache();
+        if(localOptions.clearCache) utils.core.clearCache();
 
         try {
             let numOfLogs;
@@ -583,7 +563,7 @@ async function retrievePlainTransactionData(path, opts = null) {
     name = name.split('.')[0]
 
     for(const txHash of storedInTxData){
-        if(localOptions.clearCache) utils.core.options.clearCache();
+        if(localOptions.clearCache) utils.core.clearCache();
         try {
             let result = await retrieveTxData(txHash);
 
