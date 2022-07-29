@@ -1,6 +1,5 @@
 require('dotenv').config();
-const csv = require('./csvModule.js');  //normal
-const { CSV } = require('./csvClassModule.js');  //class
+const { CSV } = require('./csvModule.js');  //class
 const TransactionDebugger = require('./debugger.js');
 const utils = require('./utils.js');
 const performance = require('perf_hooks').performance;

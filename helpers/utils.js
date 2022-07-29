@@ -1,7 +1,7 @@
 require('dotenv').config();
 const randomstring = require("randomstring");
 const path = require('path');
-const CSV = require('./csvClassModule.js');
+const CSV = require('./csvModule.js');
 const provider = `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`;
 const Web3 = require('web3');
 const web3 = new Web3(new Web3.providers.HttpProvider(provider));

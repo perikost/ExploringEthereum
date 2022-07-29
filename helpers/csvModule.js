@@ -1,9 +1,11 @@
 const fs = require('fs');
-const utils = require('./utils.js');
-const eventHeaders = ['Date','Total Events','ID', 'Type', 'Size (Bytes)', 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)\n'];
-const indexedEventHeaders = ['Date','ID', 'Type', 'Size (Bytes)', 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)\n'];
-const storageHeaders = ['Date','Type', 'Size (Bytes)','Retrieval Time (ms)\n'];
-const executeHeaders = ['Transaction Hash', 'Date','Type', 'Size (Bytes)', 'Cost (gas)', 'Execution Time (ms)\n'];
+const path = require('path');
+const assert = require('assert');
+const prompt = require('prompt-sync')({sigint: true});
+const eventHeaders = ['Date','Total Events','ID' , 'Retrieval Time All (ms)', 'Retrieval Time Specific (ms)', 'Decoding Time (ms)', 'Total Time (ms)'];
+const indexedEventHeaders = ['Date', 'Total Events', 'ID' , 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)'];
+const storageHeaders = ['Date','Retrieval Time (ms)'];
+const executeHeaders = ['Transaction Hash', 'Date', 'Cost (gas)', 'Execution Time (ms)'];
 
 const HEADERS = {
     blockchain:{
@@ -11,33 +13,193 @@ const HEADERS = {
         retrieveStorage : storageHeaders,
         retrieve_Events : eventHeaders,
         retrieve_Indexed_Events : indexedEventHeaders,
-        retrieve_Anonymous_Events : ['Date','ID', 'Type', 'Size (Bytes)', 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)\n'],
-        retrieve_txData : ['Date', 'Type', 'Size (Bytes)', 'Retrieval Time (ms)\n']
+        retrieve_Anonymous_Events : ['Date', 'Total Events', 'ID' , 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)'],
+        retrieve_txData : ['Date' , 'Retrieval Time (ms)']
     },
     ipfs:{
-        upload : ['CID', 'Date','Size (Bytes)', 'Upload Time (ms)\n'],
-        retrieve : ['Date', 'Size (Bytes)', 'Retrieval Time (ms)\n'],
+        upload : ['Date', 'CID', 'Upload Time (ms)', 'Size in Repo(Bytes)'],
+        retrieve : ['Date', 'Retrieval Time (ms)', 'Size in Repo(Bytes)', 'Size in Repo(Bytes)'],
         upload_blockchain : executeHeaders,
         retrieve_Storage : storageHeaders,
-        retrieve_Storage_All : ['Date','ID','Type', 'Size (Bytes)','Retrieval Time (ms)\n'],
+        retrieve_Storage_All : ['Date','ID','Retrieval Time (ms)'],
         retrieve_Events : eventHeaders,
         retrieve_Indexed_Events : indexedEventHeaders
     },
     swarm:{
-        upload : ['Hash', 'Date','Size (Bytes)', 'Upload Time (ms)\n'],
-        retrieve : ['Date', 'Size (Bytes)', 'Retrieval Time (ms)\n'],
+        upload : ['Date', 'Hash', 'Upload Time (ms)'],
+        retrieve : ['Date', 'Retrieval Time (ms)'],
         upload_blockchain : executeHeaders,
         retrieve_Storage : storageHeaders,
-        retrieve_Storage_All : ['Date','ID','Type', 'Size (Bytes)','Retrieval Time (ms)\n'],
+        retrieve_Storage_All : ['Date','ID','Retrieval Time (ms)'],
         retrieve_Events : eventHeaders,
         retrieve_Indexed_Events : indexedEventHeaders
     }
 }
 
 
-function readCsvAsArray (path){
+class CSV {
+
+    constructor(rootFolder = './csv_records'){
+        this.rootFolder = chooseRootFolder(rootFolder);
+        if(!this.rootFolder) this.rootFolder = createRootFolder(rootFolder);
+        addNote(this.rootFolder);
+    }
+
+    writeStats(toWrite, platform, mode, csvName, conName){
+        console.log(`Successfully executed  |${csvName}| \n\n`);
+
+        this.platform = platform;
+        this.mode = mode;
+        this.folderPath = this.rootFolder;
+
+        if (platform == 'blockchain' || mode == 'upload_blockchain'){
+            if(conName) this.folderPath = path.join(this.folderPath, 'Contracts', conName)
+            
+            this.folderPath = path.join(this.folderPath, mode)
+            this.csvPath = path.join(this.folderPath, `${csvName}.csv`);
+        }else if (platform == 'ipfs' || platform == 'swarm'){
+            // TODO: save to Contracts.....pass con.name in ipfs-swarmRopsten
+            this.folderPath = path.join(this.folderPath, platform, mode)
+            this.csvPath = path.join(this.folderPath, `${csvName}.csv`);
+        }else{
+            throw 'Error : Unefined platform';
+        }
+
+        this.setStatsAndHeaders(toWrite)
+        this.write();
+        return this.folderPath;
+    }
+
+    setStatsAndHeaders(toWrite){
+        this.headers = JSON.parse(JSON.stringify(HEADERS[this.platform][this.mode]));
+        this.toWrite = toWrite.basic;
+
+        let info = [];
+        let headers = [];
+        toWrite.inputInfo.forEach(param => {
+            headers.push('Type', 'Size (Bytes)');
+            info.push(param.type, param.size);
+        })
+        
+        this.headers.push(...headers);
+        this.toWrite.push(...info);
+    }
+
+    write(){
+        // let headers = HEADERS[this.platform][this.mode];
+        // toWrite.unshift(fileName) to push something in the begining. Used to write extra field in swarm
+
+        if(!fs.existsSync(this.folderPath)) fs.mkdirSync(this.folderPath, { recursive: true });
+        if(!fs.existsSync(this.csvPath)) fs.writeFileSync(this.csvPath, this.headers.toString() + '\n');
+
+        fs.appendFileSync(this.csvPath, this.toWrite.toString() + '\n');
+    }
+}
+
+
+function chooseRootFolder(rootFolder){
+    const folders = fs.existsSync(rootFolder)? fs.readdirSync(rootFolder) : null;
+    // if folders, sort them by year-month-day (asc)
+    if(!folders || folders.length == 0) return null;
+    else {
+        let year = str => str.substring(6,10);
+        let month = str => str.substring(3,5);
+        let day = str => str.substring(0,2);
+        
+        folders.sort((a,b) => {
+            if(year(a) > year(b)) return 1;
+    
+            if (year(a) === year(b)){
+                if(month(a) > month(b)) return 1;
+                if (month(a) === month(b)){
+                    if (day(a) > day(b)) return 1;
+                }
+            }
+    
+            return -1;
+        });
+    }
+    // else folders.sort((a,b) => a.substring(3,10) > b.substring(3,10) ? 1 : -1);
+
+    console.log('');
+    let add = prompt('Would you like to add the csv records to a previous folder (y/n)? ');
+    if(add == 'y'){
+
+        console.log('Previous folders:');
+        for(let [index, folder] of folders.entries()){
+            console.log(`(${index}) `, folder);
+        }
+        
+        console.log('');
+        let choice = Number(prompt('Choose folder '));
+    
+        if (choice >=0 && choice <= folders.length) return path.join(rootFolder, folders[choice]);
+        else{
+            console.log('Chosen folder out of bounds. Csv records will be added in a new folder.');
+            return null;
+        }
+        
+    }
+
+    console.log('Csv records will be added in a new folder.');
+    return null;
+}
+
+function createRootFolder(rootFolder){
+    rootFolder = path.join(rootFolder, new Date().toLocaleDateString('pt-PT').replaceAll('/', '-'))
+    if(!fs.existsSync(rootFolder)){
+        fs.mkdirSync(rootFolder, { recursive: true });
+        return rootFolder;
+    }
+    
+    count = 0;
+    let temp = rootFolder + `_${count}`;
+    while(fs.existsSync(temp)){
+        count++;
+        temp = rootFolder + `_${count}`;
+    }
+    
+    fs.mkdirSync(temp, { recursive: true });
+    return temp;
+}
+
+function addNote(folder){
+    assert(fs.existsSync(folder), 'Csv root folder not found');
+    file = path.join(folder, 'Notes.txt')
+
+    console.log('');
+    let add = prompt('Would you like to add a note in the csv folder (y/n)? ');
+    if(add == 'y'){
+        if(fs.existsSync(file)){
+            let notes = readLines(file);
+            console.log('Your previous notes: \n');
+            for(let note of notes){
+                console.log(note);
+            }
+        }
+
+        let note = prompt('Peaseyour note...  ');
+        if(note){
+            note = new Date().toString().slice(0,24) + '\t' + note;
+            fs.appendFileSync(file, note + '\n');
+        }
+    }
+    
+
+}
+
+function readLines (filePath){
+    let csv = fs.readFileSync(filePath, 'utf8');
+
+    if(csv.includes('\r\n')) csv = csv.split('\r\n');   // windows line break https://stackoverflow.com/questions/3821784/whats-the-difference-between-n-and-r-n
+    else if(csv.includes('\n')) csv = csv.split('\n'); // linux line break
+
+    return csv;
+}
+
+function readCsvAsArray (filePath, start = 0){
     let outer = [];
-    let csv = fs.readFileSync(path, 'utf8');
+    let csv = fs.readFileSync(filePath, 'utf8');
 
     if(csv.includes('\r\n')) csv = csv.split('\r\n');   // windows line break https://stackoverflow.com/questions/3821784/whats-the-difference-between-n-and-r-n
     else if(csv.includes('\n')) csv = csv.split('\n'); // linux line break
@@ -48,92 +210,83 @@ function readCsvAsArray (path){
 
         outer.push(line);
     }
-    return outer;
-};
+    if(start) return outer.slice(start) 
+    else return outer;
+}
 
 
-function average(csv, path) {
-    let avrg = Object();
+function csvAverage(csv, filePath) {
+    let avrg = {};
     let headers = csv[0];
     csv = csv.slice(1);
 
-    for (var i = 0; i < headers.length; i++) {
-        header = headers[i];
+    headers.map((header, index) => {
+        if(header.toLowerCase().includes('time')) {
+            avrg[header] = {};
+            avrg[header]['index'] = index;
+        }
+    })
 
-        if(header.includes('Retrieval') || header.includes('Decoding') || header.includes('Total Time') || header.includes('Upload') ){
-            avrg[header] = Object();
-            avrg[header]['sum'] = 0;
-            avrg[header]['index'] = i;
+    let sizeIndex = headers.findIndex(header => header.toLowerCase().includes('size'))
+
+    for(const line of csv){
+        let size = line[sizeIndex]
+        for(const value of Object.values(avrg)){
+            if(!value[size]){
+                value[size] = {
+                    sum: 0,
+                    count: 0
+                }   
+            }
+
+            value[size].sum += Number(line[value.index]);
+            value[size].count++;
         }
     }
 
-    for(var line of csv){
-        for(var key of Object.keys(avrg)){
-            avrg[key].sum = Number(avrg[key].sum) + Number(line[avrg[key].index]);
+    for(const value of Object.values(avrg)){
+        delete value.index;
+        let totalSum = 0;
+        let totalCount = 0; 
+        for(const subValue of Object.values(value)){
+            totalSum += subValue.sum;
+            totalCount += subValue.count; 
+
+            subValue.average = subValue.sum / subValue.count;
         }
+        value.average = totalSum / totalCount;
     }
 
-    let splitPath = path.split('/');
-    let csvName = splitPath[splitPath.length - 1];
-    fs.appendFileSync('C:/Users/perik/Desktop/For Paper/all.csv', '\n' + csvName + '\n');
+    let jsonName = path.parse(filePath).name + '_average.json';
+    let jsonPath = path.join(path.dirname(filePath), jsonName);
 
-    for(var key of Object.keys(avrg)){
-        avrg[key].sum /= csv.length;
-        let toWrite = [key, avrg[key].sum]
+    fs.writeFileSync(jsonPath, JSON.stringify(avrg, null, 4))
 
-        fs.appendFileSync(path, toWrite.toString() + '\n');
-        fs.appendFileSync('C:/Users/perik/Desktop/For Paper/all.csv', toWrite.toString() + '\n');
-    }
+    // append column average to the csv
+    let toWrite = headers.map(header => avrg[header] ? avrg[header].average : '');
+    fs.appendFileSync(filePath, toWrite.toString() + '\n');
 }
 
 
-function _average(path){
-    const items = fs.readdirSync(path);
+function average(filePath){
+    const items = fs.readdirSync(filePath);
 
-    for(var item of items){
-        pathToItem = path + '/' + item;
+    for(const item of items){
+        pathToItem = path.join(filePath, item);
         if(fs.lstatSync(pathToItem).isDirectory()) {
-            console.log(item, "directory");
-            _average(pathToItem);
+            average(pathToItem);
         }
         else {
+            if(path.parse(pathToItem).ext !== '.csv') continue;
             let csv = readCsvAsArray(pathToItem);
-            average(csv, pathToItem);
+            csvAverage(csv, pathToItem);
         }
     }
-}
-
-
-function _write(toWrite, platform, mode, csvName, conName){
-    let folder = './csv_records/Contracts/';
-    let file;
-
-
-    if (platform == 'blockchain' || mode == 'upload_blockchain'){
-        folderPath = './csv_records/Contracts/';
-        if(conName) folder += `${conName}/`;
-        folder += `${mode}/`;
-        file = folder + `${csvName}.csv`;
-    }else if ((platform == 'ipfs' || platform == 'swarm')){
-        // TODO: save to Contracts.....pass con.name in ipfs-swarmRopsten
-        csvPath = folderPath + `${mode}.csv`;
-    }else{
-        throw 'Error : Unefined platform';
-    }
-
-    let headers = HEADERS[platform][mode];
-    // toWrite.unshift(fileName) to push something in the begining. Used to write extra field in swarm
-
-    if(!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
-    if(!fs.existsSync(file)) fs.writeFileSync(file, headers.toString());
-
-    fs.appendFileSync(file, toWrite.toString() + '\n');
 }
 
 
 module.exports = {
-    write : _write,
-    readCsvAsArray : readCsvAsArray,
-    // differentiate : _differentiate,
-    average : _average
+    CSV,
+    average,
+    readCsvAsArray
 };

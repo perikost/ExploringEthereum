@@ -1,6 +1,6 @@
 const blockchain = require('./helpers/ropstenModule.js');
 const utils = require('./helpers/utils.js');
-const csv = require('./helpers/csvClassModule')
+const csv = require('./helpers/csvModule.js')
 
 var contracts = [];
 

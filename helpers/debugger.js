@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const csv = require('./csvClassModule.js');
+const csv = require('./csvModule.js');
 const utils = require('./utils.js');
 
 const REEXEC = Number.MAX_SAFE_INTEGER;

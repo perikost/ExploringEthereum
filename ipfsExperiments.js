@@ -1,6 +1,6 @@
 const ipfs = require('./helpers/ipfsModule.js');
 const utils = require('./helpers/utils.js');
-const csv = require('./helpers/csvClassModule.js')
+const csv = require('./helpers/csvModule.js')
 
 
 async function uploadStrings({clearRepo = false, start = 4, step = 4, maxStringSize = 16384} = {}){

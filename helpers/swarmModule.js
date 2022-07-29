@@ -1,11 +1,10 @@
 const fs = require('fs');
-const csv = require('./csvModule.js');
 const utils = require('./utils.js');
 const performance = require('perf_hooks').performance;
 const { Bee, BeeDebug } = require("@ethersphere/bee-js");
 const bee = new Bee("http://localhost:1633");
 const beeDebug = new BeeDebug("http://localhost:1635");
-const CSV = require('./csvClassModule.js').CSV;  //class
+const { CSV } = require('./csvModule.js');
 const csvObject = new CSV();
 //const bee = new Bee("https://gateway.ethswarm.org");
 
