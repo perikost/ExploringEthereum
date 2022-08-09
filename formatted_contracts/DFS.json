@@ -1,7 +1,7 @@
 {
   "name": "DFS",
   "jsonPath": "/home/perikost/nodejs/exploringEthereum/local_blockchain/build/contracts/DFS.json",
-  "contractAddress": "0x945384337C793300BCDF485A5a89a0aa5FF5fC7A",
+  "contractAddress": "fill in the contract's address",
   "fallback": false,
   "functions": [
     {
@@ -19,7 +19,12 @@
           "length": null
         },
         {
-          "type": "bytes8",
+          "type": "bytes4",
+          "value": null,
+          "length": null
+        },
+        {
+          "type": "bytes4",
           "value": null,
           "length": null
         },
@@ -171,7 +176,12 @@
           "length": null
         },
         {
-          "type": "bytes8",
+          "type": "bytes4",
+          "value": null,
+          "length": null
+        },
+        {
+          "type": "bytes4",
           "value": null,
           "length": null
         },
@@ -208,7 +218,10 @@
           "type": "bytes8"
         },
         {
-          "type": "bytes8"
+          "type": "bytes4"
+        },
+        {
+          "type": "bytes4"
         },
         {
           "type": "bytes8"
@@ -402,9 +415,15 @@
         },
         {
           "indexed": false,
-          "internalType": "bytes8",
+          "internalType": "bytes4",
           "name": "hashSize",
-          "type": "bytes8"
+          "type": "bytes4"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes4",
+          "name": "multibase",
+          "type": "bytes4"
         },
         {
           "indexed": false,
@@ -463,9 +482,14 @@
           "type": "bytes8"
         },
         {
-          "internalType": "bytes8",
+          "internalType": "bytes4",
           "name": "hashSize",
-          "type": "bytes8"
+          "type": "bytes4"
+        },
+        {
+          "internalType": "bytes4",
+          "name": "multibase",
+          "type": "bytes4"
         },
         {
           "internalType": "bytes8",
@@ -479,7 +503,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -492,7 +517,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -505,7 +531,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -518,7 +545,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -531,7 +559,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -544,7 +573,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -559,9 +589,14 @@
           "type": "bytes8"
         },
         {
-          "internalType": "bytes8",
+          "internalType": "bytes4",
           "name": "_hashSize",
-          "type": "bytes8"
+          "type": "bytes4"
+        },
+        {
+          "internalType": "bytes4",
+          "name": "_multibase",
+          "type": "bytes4"
         },
         {
           "internalType": "bytes8",
@@ -722,9 +757,14 @@
           "type": "bytes8"
         },
         {
-          "internalType": "bytes8",
+          "internalType": "bytes4",
           "name": "_hashSize",
-          "type": "bytes8"
+          "type": "bytes4"
+        },
+        {
+          "internalType": "bytes4",
+          "name": "_multibase",
+          "type": "bytes4"
         },
         {
           "internalType": "bytes8",

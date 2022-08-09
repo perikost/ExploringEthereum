@@ -7,7 +7,8 @@ contract DFS{
   struct CID {
     bytes32 hashDigest;
     bytes8 hashFunction;
-    bytes8 hashSize;
+    bytes4 hashSize;
+    bytes4 multibase;
     bytes8 multicodec;
     bytes8 version;
   }
@@ -24,12 +25,13 @@ contract DFS{
   event digest(bytes32 hashDigest);
   event swarm(bytes32 swarmHash);
   event swarmEnc(bytes swarmHashEncrypted);
-  event selfDescribedCid(bytes32 hashDigest, bytes8 hashFunction, bytes8 hashSize, bytes8 multicodec, bytes8 version);
+  event selfDescribedCid(bytes32 hashDigest, bytes8 hashFunction, bytes4 hashSize, bytes4 multibase, bytes8 multicodec, bytes8 version);
 
-  function storeCid(bytes32 _hashDigest, bytes8 _hashFunction, bytes8 _hashSize, bytes8 _multicodec, bytes8 _version) external{
+  function storeCid(bytes32 _hashDigest, bytes8 _hashFunction, bytes4 _hashSize, bytes4 _multibase, bytes8 _multicodec, bytes8 _version) external{
     cid.hashDigest = _hashDigest; 
     cid.hashFunction = _hashFunction; 
     cid.hashSize = _hashSize; 
+    cid.multibase = _multibase;
     cid.multicodec = _multicodec; 
     cid.version = _version; 
   }
@@ -74,8 +76,8 @@ contract DFS{
     emit swarmEnc(_hash);
   }
 
-  function logSelfDescribedCid(bytes32 _hashDigest, bytes8 _hashFunction, bytes8 _hashSize, bytes8 _multicodec, bytes8 _version) external {
-    emit selfDescribedCid(_hashDigest, _hashFunction, _hashSize, _multicodec, _version);
+  function logSelfDescribedCid(bytes32 _hashDigest, bytes8 _hashFunction, bytes4 _hashSize, bytes4 _multibase, bytes8 _multicodec, bytes8 _version) external {
+    emit selfDescribedCid(_hashDigest, _hashFunction, _hashSize, _multibase, _multicodec, _version);
   }
 
   function reset() external{

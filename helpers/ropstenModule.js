@@ -27,7 +27,6 @@ const defaultFunctionOptions = {
     keepStats: false
 };
 
-
 function loadBlockchain(provider = 'localhost', opts = null){ 
     utils.core.setOptions(opts, options);
     if(provider === 'infura' && process.env.INFURA_ENDPOINT) provider = process.env.INFURA_ENDPOINT;
@@ -62,7 +61,7 @@ async function sendData(input, opts = null) {
     if(localOptions.keepStats && options.keepStats) {
         let toWrite = {
             basic: [result.txHash, Date().slice(0,24), result.gasUsed, result.executionTime],
-            inputInfo: info
+            inputInfo: info // TODO: check
         };
         csvObject.writeStats(toWrite, 'blockchain', 'execute', 'send_data');
     }
@@ -117,11 +116,11 @@ async function send(input, account, accessList = null){
     try{
         // print node's version
         let nodeVersion = await web3.eth.getNodeInfo();
-        console.log('Node version:', nodeVersion);
+        console.log('Node version:', nodeVersion);  
 
         let accountTo = formattedCon ? formattedCon.contractAddress : account;
         let nonce = await web3.eth.getTransactionCount(process.env.MY_ADDRESS);
-        let gasprice = await getGaspriceBasedOnHistory(); // TODO: Should make it work in localhost mode as well where getFeeHistory() isn't available
+        let gasprice = 20000000000// await getGaspriceBasedOnHistory(); // TODO: Should make it work in localhost mode as well where getFeeHistory() isn't available
 
         let rawTx = {
              nonce: nonce,

@@ -210,7 +210,7 @@ const dfs = {
         for(const [key,val] of Object.entries(inspectedCid)){
             inspectedCid[key] = web3.utils.toHex(val)
         }
-    
+        if(inspectedCid.version !== '0x0') inspectedCid.base = web3.utils.toHex(cidString[0]) 
         inspectedCid.digest = '0x' + Buffer.from(cid.multihash.digest).toString('hex');
         
         // or
