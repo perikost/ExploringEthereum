@@ -13,7 +13,7 @@ var txDebugger;
 var errors = 0;
 
 const options = {
-    // testnet: 'ropsten',
+    chain: 'ropsten',
     fork: 'london', 
     keepStats: false,
     transactionPollingTimeout: 3600*2
@@ -91,13 +91,13 @@ async function fallback(input, id = null, opts = null){
     if(localOptions.keepStats && options.keepStats){
         let toWrite = {
             basic: [result.txHash, Date().slice(0,24), result.gasUsed, result.executionTime],
-            inputInfo: info
+            inputInfo: utils.core.type(input)
         };
         let folderPath = csvObject.writeStats(toWrite, 'blockchain', 'execute', 'fallback', formattedCon.name);
 
         if(localOptions.debug){
-            await txDebugger.debugTransaction(txHash);
-            await txDebugger.saveDebuggedTransaction(message, null, folderPath, Date().slice(0,24).replaceAll(' ', '_'))
+            await txDebugger.debugTransaction(result.txHash);
+            await txDebugger.saveDebuggedTransaction(message, null, folderPath, Date().slice(0,24).replace(/\s|:/g, '_'))
         } 
     }
 }
@@ -130,7 +130,7 @@ async function send(input, account, accessList = null){
              value: 0,
              data: input,
              accessList: accessList,
-             chain: 'ropsten',
+             chain: options.chain,
              hardfork: options.fork
         };
 
@@ -190,13 +190,13 @@ async function executeFunction(name, values = [], opts = null){
         if(localOptions.keepStats && options.keepStats){
             let toWrite = {
                 basic: [result.txHash, Date().slice(0,24), result.gasUsed, result.executionTime],
-                inputInfo: info
+                inputInfo: utils.core.type(values)
             };
             let folderPath = csvObject.writeStats(toWrite, 'blockchain', 'execute', name, formattedCon.name);
 
             if(localOptions.debug){
-                await txDebugger.debugTransaction(txHash);
-                await txDebugger.saveDebuggedTransaction(message, null, folderPath, Date().slice(0,24).replaceAll(' ', '_'))
+                await txDebugger.debugTransaction(result.txHash);
+                await txDebugger.saveDebuggedTransaction(message, null, folderPath, Date().slice(0,24).replace(/\s|:/g, '_'))
             } 
         }
 
@@ -283,7 +283,7 @@ async function retrieveStorage( opts = null){
 
 async function isStorageDirty(getters){
     for(const getter of getters){
-        let result = await executeGetter(getter, {keepStats: false});
+        let result = await executeGetter(getter, values = [], {keepStats: false});
         if(!result) continue;
         if(typeof result === 'object'){
             for(const val of Object.values(result)) if(!utils.blockchain.isEmpty(val)) return true;

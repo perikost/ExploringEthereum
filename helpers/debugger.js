@@ -108,7 +108,7 @@ module.exports = class TransactionDebugger {
         let txHashes = records.map(record => record[0])
         let folderPath = path.join(path.dirname(csvPath), path.parse(csvPath).name)
 
-        for(const txHash of txHashes) await this.debugOldTransaction(txHash, folderPath, Date().slice(0,24).replaceAll(' ', '_'));
+        for(const txHash of txHashes) await this.debugOldTransaction(txHash, folderPath, Date().slice(0,24).replace(/\s|:/g, '_'));
     }
 
     async debugAllSavedTransactions(rootFolder){
