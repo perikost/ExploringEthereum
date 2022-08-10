@@ -102,17 +102,6 @@ async function fallback(input, id = null, opts = null){
     }
 }
 
-async function getGaspriceBasedOnHistory(){
-    let latestBlock = await web3.eth.getBlockNumber();
-    let blockRange = 10;
-    let feeHistory = await web3.eth.getFeeHistory(blockRange, Number(latestBlock), [0, 100]);
-    let baseFeesToNumber = feeHistory.baseFeePerGas.map(fee => web3.utils.hexToNumber(fee));
-    let wei = baseFeesToNumber.reduce((a, b) => a + b, 0) 
-    wei /= baseFeesToNumber.length;
-    wei += Number(web3.utils.toWei('20', 'gwei'));
-    return Math.ceil(wei);
-}
-
 async function send(input, account, accessList = null){
     try{
         // print node's version
@@ -121,12 +110,15 @@ async function send(input, account, accessList = null){
 
         let accountTo = formattedCon ? formattedCon.contractAddress : account;
         let nonce = await web3.eth.getTransactionCount(process.env.MY_ADDRESS);
-        let gasprice = await getGaspriceBasedOnHistory(); // TODO: Should make it work in localhost mode as well where getFeeHistory() isn't available
+        let gasPrice = await web3.eth.getGasPrice();
+        // eth.getGasPrice() returns the current gas price oracle. The gas price is determined by the last few blocks median gas price.
+        // Add an extra 10 gwei to avoid a lot of "Transaction gas price is too low" errors
+        gasPrice = Number(gasPrice) + Number(web3.utils.toWei('10', 'gwei'));
 
         let rawTx = {
              nonce: nonce,
              to: accountTo,
-             gasPrice : gasprice,
+             gasPrice : gasPrice,
              value: 0,
              data: input,
              accessList: accessList,
