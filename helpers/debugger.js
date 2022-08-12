@@ -34,6 +34,9 @@ module.exports = class TransactionDebugger {
     }
 
     async saveDebuggedTransaction(txData, accessList, folderPath, fileName){
+        // if there is no debugged transaction, return
+        if(!this.debuggedTx) return;
+
         let steps = this.debuggedTx.structLogs;
         steps.map((step, index) => step.step = index);
         let txDataInfo = txData ?  processTxData(txData): 'not provided';
@@ -61,8 +64,15 @@ module.exports = class TransactionDebugger {
     }
 
     async debugTransaction(txHash){
-        this.debuggedTx = await this.web3.debug.transaction(txHash ,{});
-        this.debuggedTx.txHash = txHash;
+        try {
+            // clear previous debuggedTx
+            this.debuggedTx = null;
+            this.debuggedTx = await this.web3.debug.transaction(txHash ,{});
+            this.debuggedTx.txHash = txHash;
+        } catch (error) {
+            console.warn('Warning: Transaction debugging failed. Make sure your node supports debugging');
+            console.warn(error.message, '\n');
+        }
     }
 
     async debugOldTransaction(txHash, folderPath, fileName){
