@@ -23,6 +23,8 @@
     "prompt-sync": "^4.1.6",
     "randomstring": "^1.1.5",
     "shelljs": "^0.8.5",
+    "socket.io": "^4.5.2",
+    "socket.io-client": "^4.5.2",
     "web3": "^1.7.3"
   }
 }
