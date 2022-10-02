@@ -4,7 +4,9 @@
   "description": "",
   "main": "interact.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "node helpers/remote-experiments/server.js",
+    "remote-experiments": "node dfsRemoteExperiments.js"
   },
   "author": "",
   "license": "ISC",
@@ -23,6 +25,8 @@
     "prompt-sync": "^4.1.6",
     "randomstring": "^1.1.5",
     "shelljs": "^0.8.5",
+    "socket.io": "^4.5.2",
+    "socket.io-client": "^4.5.2",
     "web3": "^1.7.3"
   }
 }
