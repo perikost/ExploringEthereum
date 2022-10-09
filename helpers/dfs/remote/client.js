@@ -12,8 +12,9 @@ module.exports = class Client {
     methods;
     finished;
 
-    constructor() {
-        this.socket = io('http://localhost:3000', {
+    constructor(ip, port) {
+        const destination = `http://${ip || 'localhost'}:${port || 3000}`
+        this.socket = io(destination, {
             auth: {
                 user: os.hostname()
             }

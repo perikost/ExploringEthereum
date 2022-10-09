@@ -1,5 +1,11 @@
 const Client = require('./helpers/dfs/remote/client');
 const { IpfsExperiment, SwarmExperiment } = require('./helpers/dfs/experiments');
+const { program } = require('commander');
+
+program
+    .option('-i, --ip <string>', 'The ip of the server')
+    .option('-p, --port <number>', 'The port of the server');
+program.parse();
 
 const options = {
     data: {
@@ -15,7 +21,8 @@ const methods = (platform) => ({
 
 
 (async () => {
-    const client = new Client();
+    const { ip, port } = program.opts();
+    const client = new Client(ip, port);
 
     const ipfs = new IpfsExperiment();
     await client.run('IPFS', methods(ipfs));

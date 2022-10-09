@@ -1,6 +1,10 @@
 const { Server } = require('socket.io');
 const { CSV } = require('../../csvModule.js');
 const csv = new CSV();
+const { program } = require('commander');
+
+program.option('-p, --port <number>', 'The port of the server');
+program.parse();
 
 const ROUND = {
     id: 0,
@@ -18,7 +22,7 @@ const EXPERIMENT = {
 };
 
 /**
-* Configures the experiment's initial data/
+* Configures the experiment's initial data
 * @param {Object} experiment - Basic info about the experiment provided by the client that started the experiment.
 */
 async function configExperimentData(experiment) {
@@ -58,8 +62,8 @@ function writeRoundResults(workers) {
     }
 }
 
-
-const io = new Server(3000);
+const { port } = program.opts();
+const io = new Server(port || 3000);
 let experiment;
 
 io.on('connection', (socket) => {
