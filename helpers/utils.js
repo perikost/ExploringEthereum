@@ -16,15 +16,28 @@ const assert = require('assert');
 const core = {
     setOptions(opts, targetOpts) {
         if(!opts || typeof opts !== 'object' || Object.keys(opts).length === 0) return;
-        for(const opt in targetOpts) if(opts.hasOwnProperty(opt)) targetOpts[opt] = opts[opt];
+
+        for(const opt in targetOpts) {
+            if (typeof targetOpts[opt] === 'object') {
+                this.setOptions(opts[opt], targetOpts[opt])
+            } else if (opts.hasOwnProperty(opt)) {
+                targetOpts[opt] = opts[opt];
+            }
+        }
     },
-    
-    getOptions(opts, sourceOpts) {
-        if(!opts || typeof opts !== 'object' || Object.keys(opts).length === 0) return JSON.parse(JSON.stringify(sourceOpts));
-        let options = {};
-    
-        for (const opt in sourceOpts) options[opt] = opts.hasOwnProperty(opt) ? opts[opt] : sourceOpts[opt];
-    
+
+    getOptions(opts, sourceOpts, merge = false) {
+        if (!opts || typeof opts !== 'object' || Object.keys(opts).length === 0) return JSON.parse(JSON.stringify(sourceOpts));
+        let options = opts && merge? {...opts} : {}; // TODO: investigate if they should be merged
+
+        for (const opt in sourceOpts) {
+            if (typeof sourceOpts[opt] === 'object') {
+                options[opt] = this.getOptions(opts[opt], sourceOpts[opt], merge)
+            } else {
+                options[opt] = opts.hasOwnProperty(opt) ? opts[opt] : sourceOpts[opt];
+            }
+        }
+
         return options;
     },
 
@@ -77,7 +90,21 @@ const core = {
         return info;
     },
 
+    byteSize (dataSize) {
+        if (typeof dataSize === 'number') return dataSize;
+
+        const sizeMap = { 'b': 1, 'kb': 1024, 'mb': 1024 * 1024 }
+        // const size = parseFloat(dataSize.match(/[. 0-9]+/)[0]);
+        // const unitMatch = dataSize.match(/kb|mb|b/i);
+        // const unit = unitMatch ? unitMatch[0].toLowerCase() : 'b'
+        const fileSize = dataSize.match(/(?<size>[. 0-9]+)(?<unit>kb|mb|b)?/i)
+        const {size, unit} = fileSize.groups;
+
+        return Math.floor(size * sizeMap[unit.toLowerCase() || 'b']);
+    },
+
     getRandomString(length){
+        length = this.byteSize(length);
         // returns 32 characters if length = 0
         let string = randomstring.generate({
             length: length,
@@ -98,6 +125,9 @@ const core = {
     },
 
     getRandomStrings({start = 1, maxStringSize = 16384, step = 2, stepOp = '*'} = {}){
+        maxStringSize = this.byteSize(maxStringSize);
+        start = this.byteSize(start)
+
         let randomStrings = [];
         let i = start;
         while(true){
