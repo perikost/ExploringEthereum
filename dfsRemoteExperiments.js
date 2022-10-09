@@ -1,32 +1,27 @@
-const Client = require('./helpers/remote-experiments/client');
+const Client = require('./helpers/dfs/remote/client');
+const { IpfsExperiment, SwarmExperiment } = require('./helpers/dfs/experiments');
 
-function sleep() {
-    return new Promise(resolve => setTimeout(resolve, 1000));
-}
-
-const methods = {
-    async upload() {
-        await sleep();
-        return 'identifiers';
-    },
-    async download(ids) {
-        await sleep();
-        return 'downloaded';
+const options = {
+    data: {
+        start: '4kb',
+        maxStringSize: '16kb'
     }
 };
 
+const methods = (platform) => ({
+    upload: () => platform.uploadStrings(options),
+    download: cids => platform.downloadStrings(cids)
+});
+
 
 (async () => {
-    const ipfsClient = new Client(methods);
-    await ipfsClient.run({
-        platform: 'IPFS',
-        name: 'remote_download_latency'
-    });
+    const client = new Client();
 
-    const swarmClient = new Client(methods);
-    await swarmClient.run({
-        platform: 'Swarm',
-        name: 'remote_download_latency'
-    });
-    process.stdin.destroy();
+    const ipfs = new IpfsExperiment();
+    await client.run('IPFS', methods(ipfs));
+
+    const swarm = new SwarmExperiment();
+    await client.run('Swarm', methods(swarm));
+
+    client.disconnect();
 })();

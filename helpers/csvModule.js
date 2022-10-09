@@ -48,6 +48,7 @@ class CSV {
     writeStats(toWrite, platform, mode, csvName, conName){
         console.log(`Successfully executed  |${csvName}| \n\n`);
 
+        platform = platform.toLowerCase();
         this.platform = platform;
         this.mode = mode;
         this.folderPath = this.rootFolder;

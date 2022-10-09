@@ -1,4 +1,6 @@
 const { Server } = require('socket.io');
+const { CSV } = require('../../csvModule.js');
+const csv = new CSV();
 
 const ROUND = {
     id: 0,
@@ -17,12 +19,12 @@ const EXPERIMENT = {
 
 /**
 * Configures the experiment's initial data/
-* @param {Object} experimentBase - Basic info about the experiment provided by the client that started the experiment.
+* @param {Object} experiment - Basic info about the experiment provided by the client that started the experiment.
 */
-async function configExperimentData(experimentBase) {
+async function configExperimentData(experiment) {
     // merge an empty experiment object with the provided basic info
     const emptyExperiment = JSON.parse(JSON.stringify(EXPERIMENT))
-    experiment = { ...emptyExperiment, ...experimentBase };
+    experiment = { ...emptyExperiment, ...experiment };
 
     // update rest of the data
     const sockets = await io.fetchSockets();
@@ -45,6 +47,14 @@ function nextRound() {
     } else {
         console.log('Experiment finished\n');
         io.emit('experiment-finished')
+    }
+}
+
+function writeRoundResults(workers) {
+    for(const worker of workers) {
+        for(const stat of worker.results) {
+            csv.writeStats(stat, experiment.platform, 'retrieve', worker.user);
+        }
     }
 }
 
@@ -78,12 +88,17 @@ io.on('connection', (socket) => {
         // if all workers are finished write the results and start the next round
         if (round.workersFinished === round.workers.length) {
             // write the results
-            // ...
+            writeRoundResults(round.workers)
 
             console.log(`Round ${round.id}: All nodes downloaded the data`);
 
             // start next round
             nextRound();
         }
+    });
+
+    socket.on('client-error', (err) => {
+        console.log(`\nUser ${socket.data.user} encountered the following error: `, err);
+        io.emit('error');
     });
 });
