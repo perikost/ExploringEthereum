@@ -25,10 +25,10 @@ const EXPERIMENT = {
 * Configures the experiment's initial data
 * @param {Object} experiment - Basic info about the experiment provided by the client that started the experiment.
 */
-async function configExperimentData(experiment) {
+async function configExperimentData(experimentInfo) {
     // merge an empty experiment object with the provided basic info
     const emptyExperiment = JSON.parse(JSON.stringify(EXPERIMENT))
-    experiment = { ...emptyExperiment, ...experiment };
+    experiment = { ...emptyExperiment, ...experimentInfo };
 
     // update rest of the data
     const sockets = await io.fetchSockets();
@@ -55,8 +55,8 @@ function nextRound() {
 }
 
 function writeRoundResults(workers) {
-    for(const worker of workers) {
-        for(const stat of worker.results) {
+    for (const worker of workers) {
+        for (const stat of worker.results) {
             csv.writeStats(stat, experiment.platform, 'retrieve', worker.user);
         }
     }

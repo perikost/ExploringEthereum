@@ -28,6 +28,7 @@ const methods = (platform) => ({
     await client.run('IPFS', methods(ipfs));
 
     const swarm = new SwarmExperiment();
+    await swarm.configPostageBatch();
     await client.run('Swarm', methods(swarm));
 
     client.disconnect();

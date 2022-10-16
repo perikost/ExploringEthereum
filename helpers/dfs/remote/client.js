@@ -49,7 +49,8 @@ module.exports = class Client {
                 console.log(`Round ${round}: I uploaded the data`);
 
                 // if data is downloaded instantly a timeout error is thrown
-                await utils.core.sleep(20);
+                // wait 4 minutes for the data to reach the nodes responsible for storing it (swarm: area of responsibility)
+                await utils.core.sleep(240);
                 this.socket.emit('uploaded', results)
             } catch (error) {
                 console.log(error)
