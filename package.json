@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "server": "node helpers/dfs/remote/server.js",
-    "remote-experiments": "node dfsRemoteExperiments.js"
+    "remote-experiments": "node dfsRemoteExperiments.js",
+    "decrypt": "node helpers/decryptAccount.js"
   },
   "author": "",
   "license": "ISC",
