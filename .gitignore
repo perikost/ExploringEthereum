@@ -1,0 +1,4 @@
+node_modules/
+csv_records/
+local_blockchain/
+.env
