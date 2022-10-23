@@ -15,6 +15,10 @@ const OPTIONS = {
         pin: true,
         deferred: true, // when true, node uploads data locally and then pushes chunks to the network
         encrypt: false
+    },
+    downloadOptions: {
+        timeout: 30000,
+        retry: 4
     }
 };
 
@@ -84,7 +88,7 @@ class SwarmBase {
 
         // measure retrieval latency
         const begin = performance.now();
-        let data = await bee.downloadData(hash);
+        let data = await bee.downloadData(hash, localOptions.downloadOptions);
         const retrievalLatency = (performance.now() - begin).toFixed(4);
 
         // set up the download process's stats
