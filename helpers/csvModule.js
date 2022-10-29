@@ -18,7 +18,7 @@ const HEADERS = {
     },
     ipfs:{
         upload : ['Date', 'CID', 'Upload Time (ms)', 'Size in Repo(Bytes)'],
-        retrieve : ['Date', 'Retrieval Time (ms)', 'Size in Repo(Bytes)', 'Size in Repo(Bytes)'],
+        retrieve : ['Date', 'Retrieval Time (ms)', 'Size in Repo(Bytes)'],
         upload_blockchain : executeHeaders,
         retrieve_Storage : storageHeaders,
         retrieve_Storage_All : ['Date','ID','Retrieval Time (ms)'],
