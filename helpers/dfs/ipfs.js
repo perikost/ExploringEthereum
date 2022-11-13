@@ -1,5 +1,4 @@
 const { create, globSource } = require('ipfs-http-client');
-const ipfs = create('http://localhost:5001');
 const fs = require('fs');
 const bs58 = require('bs58');
 const { CSV } = require('../csvModule.js');
@@ -41,17 +40,19 @@ const OPTIONS = {
         progress: null // e.g., (prog) => console.log(prog)
     },
     downloadOptions: {
-        timeout: 30000
+        timeout: 150000
     }
 };
 
 class IpfsBase {
     options;
     csv;
+    ipfs;
 
     constructor(opts) {
         // merge the defaultOptions with the input options
         this.options = utils.core.getOptions(opts, OPTIONS, true);
+        this.ipfs = create('http://localhost:5001');
     }
 
     // TODO: Currently this function has only been tested with strings. Ensure that other data types are handled as well.
@@ -60,7 +61,7 @@ class IpfsBase {
 
         // measure upload latency
         const begin = performance.now();
-        const uploaded = await ipfs.add(data, localOptions.uploadOptions);
+        const uploaded = await this.ipfs.add(data, localOptions.uploadOptions);
         const uploadLatency = (performance.now() - begin).toFixed(4);
 
         // TODO: consider approaching this as done in download() so that remote upload experiments can be conducted 
@@ -88,11 +89,11 @@ class IpfsBase {
 
         // measure retrieval latency
         const begin = performance.now();
-        for await (const chunk of ipfs.cat(cid, localOptions.downloadOptions)) chunks.push(chunk);
+        for await (const chunk of this.ipfs.cat(cid, localOptions.downloadOptions)) chunks.push(chunk);
         const retrievalLatency = (performance.now() - begin).toFixed(4);
 
         // get ipfs-object's stats and convert data to string (if applicable)
-        const objectStats = await ipfs.object.stat(cid);
+        const objectStats = await this.ipfs.object.stat(cid);
         const data = chunks.toString().replace(/,/g, ''); // TODO: find out why commas are inserted
 
         // set up the download process's stats
@@ -116,7 +117,7 @@ class IpfsBase {
 
     async getLocalCids() {
         const cids = [];
-        for await (const { cid, type } of ipfs.pin.ls()) {
+        for await (const { cid, type } of this.ipfs.pin.ls()) {
             cids.push(cid.toString());
         }
 
@@ -124,10 +125,51 @@ class IpfsBase {
     }
 
     async clearRepo() {
-        for await (const { cid, type } of ipfs.pin.ls({ type: 'recursive' })) await ipfs.pin.rm(cid);
-        for await (const res of ipfs.repo.gc());
-        let stats = await ipfs.repo.stat({ human: true });
+        for await (const { cid, type } of this.ipfs.pin.ls({ type: 'recursive' })) await this.ipfs.pin.rm(cid);
+        for await (const res of this.ipfs.repo.gc());
+        let stats = await this.ipfs.repo.stat({ human: true });
         console.log('Cleared my ipfs repo');
+    }
+
+    async findContentProvs(cid, timeout = 60000) {
+        const providers = [];
+        try {
+            const myIdentity = await this.ipfs.id()
+            const queryEvents = this.ipfs.dht.findProvs(cid, {timeout: timeout});
+
+            for await (const event of queryEvents) {
+                if (event.name === 'PROVIDER' && event.type === 4) {
+                    for (const provider of event.providers) {
+                        if (myIdentity.id !== provider.id) providers.push(provider.id);
+                    }
+                }
+            }
+        } catch (error) {
+            // pass
+        }
+        return providers;
+    }
+
+    async disconnectFromPeer(peerId, timeout = 6000) {
+        try {
+            const peerInfos = await this.ipfs.swarm.peers({timeout: timeout});
+            const connected = peerInfos.find(peer => peer.peer === peerId);
+
+            if (connected) {
+                await this.ipfs.swarm.disconnect(connected.addr.toString() + '/p2p/' + connected.peer);
+                console.log('Disconnected from peer: ', peerId);
+            }
+        } catch (error) {
+            console.log('Could not disconnect from peer', peerId);
+        }
+    }
+
+    async disconnectFromContentProvs(cid) {
+        const providers = await this.findContentProvs(cid);
+
+        for (const provider of providers) {
+            await this.disconnectFromPeer(provider);
+        }
     }
 }
 
