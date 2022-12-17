@@ -11,7 +11,10 @@ const prompt = require('prompt-sync')({sigint: true});
 const shell = require('shelljs');
 const { CID } = require('multiformats/cid');
 const assert = require('assert');
+const readline = require('readline');
 
+readline.emitKeypressEvents(process.stdin);
+if (process.stdin.isTTY) process.stdin.setRawMode(true);
 
 const core = {
     setOptions(opts, targetOpts) {
@@ -44,6 +47,18 @@ const core = {
     sleep(sec) {
         let ms = sec*1000;
         return new Promise(resolve => setTimeout(resolve, ms));
+    },
+
+    keypress() {
+        return new Promise(resolve => {
+            // Opposite of unref(), calling ref() on a previously unrefed socket will not let the program exit if it's the only socket left
+            // We use ref(),unref() to ensure that the program will wait for a keypress but will be able to exit after it 
+            process.stdin.ref();
+            process.stdin.once('keypress', (str, key) => {
+                process.stdin.unref();
+                resolve(key);
+            });
+        });
     },
 
     clearCache(){

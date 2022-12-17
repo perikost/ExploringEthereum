@@ -74,7 +74,6 @@ io.on('connection', (socket) => {
 
     socket.on('start', (experiment) => {
         console.log(`\nUser ${socket.data.user} started the experiment: `, experiment);
-        io.emit('experiment-started')
         configExperimentData(experiment).then(() => nextRound());
     });
 
