@@ -73,17 +73,14 @@ class CSV {
 
     setStatsAndHeaders(toWrite){
         this.headers = JSON.parse(JSON.stringify(HEADERS[this.platform][this.mode]));
-        this.toWrite = toWrite.basic;
+        this.toWrite = (toWrite && (toWrite.basic || (toWrite.length && toWrite))) || Array(this.headers.length).fill('-');
 
-        let info = [];
-        let headers = [];
-        toWrite.inputInfo.forEach(param => {
-            headers.push('Type', 'Size (Bytes)');
-            info.push(param.type, param.size);
-        })
-        
-        this.headers.push(...headers);
-        this.toWrite.push(...info);
+        if(toWrite && toWrite.inputInfo) {
+            toWrite.inputInfo.forEach(param => {
+                this.headers.push('Type', 'Size (Bytes)');
+                this.toWrite.push(param.type, param.size);
+            })
+        }
     }
 
     write(){
