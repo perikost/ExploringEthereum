@@ -23,6 +23,7 @@ const OPTIONS = {
 };
 
 class SwarmBase {
+    name = 'swarm';
     postageBatchId;
     options;
     csv;

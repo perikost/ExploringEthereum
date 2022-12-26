@@ -45,6 +45,7 @@ const OPTIONS = {
 };
 
 class IpfsBase {
+    name = 'ipfs';
     options;
     csv;
     ipfs;

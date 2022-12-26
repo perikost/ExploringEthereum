@@ -219,26 +219,26 @@ const blockchain = {
 
 
 const dfs = {
-    getIdentifiers(platform, rootFolder = './csv_records'){
+    getIdentifiers(network, rootFolder = './csv_records'){
         let headerToSearch;
-        if(platform == 'ipfs') headerToSearch = 'CID';
+        if(network == 'ipfs') headerToSearch = 'CID';
         else headerToSearch = 'Hash';
     
         let csvsFolder = csv.chooseCsvFolder(rootFolder);
         let folders = fs.readdirSync(csvsFolder);
     
-        let platformIndex = folders.indexOf(platform);
-        if(platformIndex < 0){
+        let networkIndex = folders.indexOf(network);
+        if(networkIndex < 0){
             console.log('Could not find uploaded cids');
             return null;
         }
     
-        let platformFolder = path.join(csvsFolder, folders[platformIndex], 'upload');
-        console.log(platformFolder);
+        let networkFolder = path.join(csvsFolder, folders[networkIndex], 'upload');
+        console.log(networkFolder);
     
         let identifiers = [];
-        for(const csvPath of fs.readdirSync(platformFolder)){
-            let info = CSV.readCsvAsArray(path.join(platformFolder, csvPath));
+        for(const csvPath of fs.readdirSync(networkFolder)){
+            let info = CSV.readCsvAsArray(path.join(networkFolder, csvPath));
             
             // get the column containing the cids, excluding the first element (header) 
             let ids = info.map(line => { return line[info[0].indexOf(headerToSearch)]; });

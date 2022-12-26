@@ -45,25 +45,25 @@ class CSV {
         addNote(this.rootFolder);
     }
 
-    writeStats(toWrite, platform, mode, csvName, conName){
+    writeStats(toWrite, network, mode, csvName, conName){
         console.log(`Successfully executed  |${csvName}| \n\n`);
 
-        platform = platform.toLowerCase();
-        this.platform = platform;
+        network = network.toLowerCase();
+        this.network = network;
         this.mode = mode;
         this.folderPath = this.rootFolder;
 
-        if (platform == 'blockchain' || mode == 'upload_blockchain'){
+        if (network == 'blockchain' || mode == 'upload_blockchain'){
             if(conName) this.folderPath = path.join(this.folderPath, 'Contracts', conName)
             
             this.folderPath = path.join(this.folderPath, mode)
             this.csvPath = path.join(this.folderPath, `${csvName}.csv`);
-        }else if (platform == 'ipfs' || platform == 'swarm'){
+        }else if (network == 'ipfs' || network == 'swarm'){
             // TODO: save to Contracts.....pass con.name in ipfs-swarmRopsten
-            this.folderPath = path.join(this.folderPath, platform, mode)
+            this.folderPath = path.join(this.folderPath, network, mode)
             this.csvPath = path.join(this.folderPath, `${csvName}.csv`);
         }else{
-            throw 'Error : Unefined platform';
+            throw 'Error : Undefined network';
         }
 
         this.setStatsAndHeaders(toWrite)
@@ -72,7 +72,7 @@ class CSV {
     }
 
     setStatsAndHeaders(toWrite){
-        this.headers = JSON.parse(JSON.stringify(HEADERS[this.platform][this.mode]));
+        this.headers = JSON.parse(JSON.stringify(HEADERS[this.network][this.mode]));
         this.toWrite = (toWrite && (toWrite.basic || (toWrite.length && toWrite))) || Array(this.headers.length).fill('-');
 
         if(toWrite && toWrite.inputInfo) {
@@ -84,7 +84,7 @@ class CSV {
     }
 
     write(){
-        // let headers = HEADERS[this.platform][this.mode];
+        // let headers = HEADERS[this.network][this.mode];
         // toWrite.unshift(fileName) to push something in the begining. Used to write extra field in swarm
 
         if(!fs.existsSync(this.folderPath)) fs.mkdirSync(this.folderPath, { recursive: true });

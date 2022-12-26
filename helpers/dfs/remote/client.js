@@ -32,6 +32,7 @@ module.exports = class Client {
                 console.log(`Round ${round}: I downloaded the data`);
                 this.socket.emit('downloaded', { results: results })
             } catch (error) {
+                console.log('Could not download one of', identifiers)
                 console.log(error)
                 this.socket.emit('client-error', error.toString());
             }
@@ -39,12 +40,12 @@ module.exports = class Client {
 
         this.socket.on('upload', async (round) => {
             try {
-                const results = await this.methods.upload()
+                const results = await this.methods.upload();
                 console.log(`Round ${round}: I uploaded the data`);
 
                 // if data is downloaded instantly a timeout error is thrown
-                // wait 4 minutes for the data to reach the nodes responsible for storing it (swarm: area of responsibility)
-                await utils.core.sleep(240);
+                // wait a minute for the data to reach the nodes responsible for storing it (swarm: area of responsibility)
+                await utils.core.sleep(60);
                 this.socket.emit('uploaded', results)
             } catch (error) {
                 console.log(error)
@@ -62,13 +63,13 @@ module.exports = class Client {
      * Prompts user to start the experiments
      *
      * @method
-     * @param {'IPFS' | 'Swarm'} platform
+     * @param {'IPFS' | 'Swarm'} network
      * @param {Object} methods - The necessary methods to run the experiments
      * @param {Function} methods.upload - An async method that uploads data to IPFS/Swarm
      * @param {Function} methods.download - An async method that downloads data from IPFS/Swarm
      * @return {Promise<string>} A promise which is fulfilled when the experiment ends
      */
-    async run(platform, methods) {
+    async run(network, methods) {
         this.methods = methods;
         // wait for user input to start the experiments
         console.log('\nPress ANY key to start the experiments or CTRL + C to exit')
@@ -76,7 +77,7 @@ module.exports = class Client {
         if (key.ctrl && key.name === 'c') process.exit();
 
         console.log('I started the experiment');
-        this.socket.emit('start', { platform: platform });
+        this.socket.emit('start', { network: network.name });
 
         // this promise will be resolved when the experiment is finished
         return new Promise((resolve, reject) => {

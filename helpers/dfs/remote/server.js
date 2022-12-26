@@ -14,7 +14,7 @@ const ROUND = {
 };
 
 const EXPERIMENT = {
-    platform: '',
+    network: '',
     name: '',
     round: ROUND,
     workers: [],
@@ -57,7 +57,7 @@ function nextRound() {
 function writeRoundResults(workers) {
     for (const worker of workers) {
         for (const stat of worker.results) {
-            csv.writeStats(stat, experiment.platform, 'retrieve', worker.user);
+            csv.writeStats(stat, experiment.network, 'retrieve', worker.user);
         }
     }
 }
