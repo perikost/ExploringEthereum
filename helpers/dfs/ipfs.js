@@ -48,11 +48,19 @@ class IpfsBase {
     options;
     csv;
     ipfs;
+    nodeId;
 
     constructor(opts) {
         // merge the defaultOptions with the input options
         this.options = utils.core.getOptions(opts, OPTIONS, true);
         this.ipfs = create('http://localhost:5001');
+    }
+
+    async getId() {
+        return this.nodeId || this.ipfs.id().then(res => {
+            this.nodeId = res.id;
+            return res.id;
+        });
     }
 
     // TODO: Currently this function has only been tested with strings. Ensure that other data types are handled as well.
@@ -124,6 +132,11 @@ class IpfsBase {
         return cids;
     }
 
+    async removeFromRepo(cid) {
+        await this.ipfs.pin.rm(cid);
+        for await (const res of this.ipfs.repo.gc());
+    }
+
     async clearRepo() {
         for await (const { cid, type } of this.ipfs.pin.ls({ type: 'recursive' })) await this.ipfs.pin.rm(cid);
         for await (const res of this.ipfs.repo.gc());
@@ -134,13 +147,13 @@ class IpfsBase {
     async findContentProvs(cid, timeout = 60000) {
         const providers = [];
         try {
-            const myIdentity = await this.ipfs.id()
+            const myIdentity = await this.getId();
             const queryEvents = this.ipfs.dht.findProvs(cid, {timeout: timeout});
 
             for await (const event of queryEvents) {
                 if (event.name === 'PROVIDER' && event.type === 4) {
                     for (const provider of event.providers) {
-                        if (myIdentity.id !== provider.id) providers.push(provider.id);
+                        if (myIdentity !== provider.id) providers.push(provider.id);
                     }
                 }
             }
@@ -158,6 +171,8 @@ class IpfsBase {
             if (connected) {
                 await this.ipfs.swarm.disconnect(connected.addr.toString() + '/p2p/' + connected.peer);
                 console.log('Disconnected from peer: ', peerId);
+            } else {
+                console.log('Not connected to peer: ', peerId);
             }
         } catch (error) {
             console.log('Could not disconnect from peer', peerId);

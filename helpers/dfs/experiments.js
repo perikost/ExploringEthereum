@@ -111,21 +111,52 @@ function Experiment(Base) {
     };
 }
 
+
 class ExtendedIpfsExperiment extends Experiment(IpfsBase) {
 
-    constructor() {
-        super();
+    constructor(opts) {
+        super(opts);
     }
 
     async downloadOnlyLocalStrings(ids, options = null) {
         utils.core.setOptions(options, this.options);
 
-        const localids = await this.getLocalids();
-        ids = ids.filter(id => localids.includes(id.toString()));
+        const localIds = await this.getLocalCids();
+        ids = ids.filter(id => localIds.includes(id.toString()));
 
-        return await this.downloadStrings(ids);
+        return this.downloadStrings(ids);
+    }
+
+    async downloadRemove(ids, options = null) {
+        utils.core.setOptions(options, this.options);
+
+        const stats = [];
+        for (const id of ids) {
+            const result = await this.download(id);
+            stats.push((result && result.stats) || null);
+
+            // remove the downloaded content from the repo
+            await this.removeFromRepo(id);
+        }
+        return stats;
+    }
+
+    async downloadRemoveDisconnect(ids, uploader, options = null) {
+        utils.core.setOptions(options, this.options);
+
+        const stats = [];
+        for (const id of ids) {
+            const result = await this.download(id);
+            stats.push((result && result.stats) || null);
+
+            // disconnect from the node that uploaded the content and remove the content from the repo
+            await this.disconnectFromPeer(uploader);
+            await this.removeFromRepo(id);
+        }
+        return stats;
     }
 }
+
 
 class ExtendedSwarmExperiment extends Experiment(SwarmBase) {
 
@@ -136,7 +167,10 @@ class ExtendedSwarmExperiment extends Experiment(SwarmBase) {
     // ...
 }
 
+
 module.exports = {
     IpfsExperiment: Experiment(IpfsBase),
-    SwarmExperiment: Experiment(SwarmBase)
+    SwarmExperiment: Experiment(SwarmBase),
+    ExtendedIpfsExperiment,
+    ExtendedSwarmExperiment
 }
