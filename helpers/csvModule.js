@@ -45,7 +45,7 @@ class CSV {
         addNote(this.rootFolder);
     }
 
-    writeStats(toWrite, network, mode, csvName, conName){
+    writeStats(toWrite, network, mode, csvName, conName = null, subfolder = null){
         console.log(`Successfully executed  |${csvName}| \n\n`);
 
         network = network.toLowerCase();
@@ -56,11 +56,14 @@ class CSV {
         if (network == 'blockchain' || mode == 'upload_blockchain'){
             if(conName) this.folderPath = path.join(this.folderPath, 'Contracts', conName)
             
-            this.folderPath = path.join(this.folderPath, mode)
+            this.folderPath = subfolder
+                ? path.join(this.folderPath, mode, subfolder)
+                : path.join(this.folderPath, mode)
             this.csvPath = path.join(this.folderPath, `${csvName}.csv`);
         }else if (network == 'ipfs' || network == 'swarm'){
-            // TODO: save to Contracts.....pass con.name in ipfs-swarmRopsten
-            this.folderPath = path.join(this.folderPath, network, mode)
+            this.folderPath = subfolder
+                ? path.join(this.folderPath, network, mode, subfolder)
+                : path.join(this.folderPath, network, mode)
             this.csvPath = path.join(this.folderPath, `${csvName}.csv`);
         }else{
             throw 'Error : Undefined network';

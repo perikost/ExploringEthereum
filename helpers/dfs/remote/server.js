@@ -58,10 +58,11 @@ function nextRound() {
 function writeRoundResults(workers) {
     for (const worker of workers) {
         for (const stat of worker.results) {
-            csv.writeStats(stat, experiment.network, 'retrieve', worker.user);
+            csv.writeStats(stat, experiment.network, 'retrieve', worker.user, null, experiment.name);
         }
     }
 }
+
 
 const { port } = program.opts();
 const io = new Server(port || 3000);
