@@ -16,6 +16,7 @@ const ROUND = {
 const EXPERIMENT = {
     network: '',
     name: '',
+    description: '',
     round: ROUND,
     workers: [],
     totalRounds: 0

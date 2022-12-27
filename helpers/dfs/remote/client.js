@@ -29,7 +29,7 @@ module.exports = class Client {
         this.socket.on('download', async (round, identifiers) => {
             try {
                 const results = await this.methods.download(identifiers)
-                console.log(`Round ${round}: I downloaded the data`);
+                console.log('\n' + `Round ${round}: I downloaded the data`);
                 this.socket.emit('downloaded', { results: results })
             } catch (error) {
                 console.log('Could not download one of', identifiers)
@@ -63,21 +63,29 @@ module.exports = class Client {
      * Prompts user to start the experiments
      *
      * @method
-     * @param {'IPFS' | 'Swarm'} network
-     * @param {Object} methods - The necessary methods to run the experiments
-     * @param {Function} methods.upload - An async method that uploads data to IPFS/Swarm
-     * @param {Function} methods.download - An async method that downloads data from IPFS/Swarm
+     * @param {Object} experiment
+     * @param {string} experiment.name - The name of the experiment
+     * @param {string} experiment.description - A description of the experiment
+     * @param {string} experiment.network - The network on which the experiment is executed
+     * @param {Object} experiment.methods - The necessary methods to run the experiments
+     * @param {Function} experiment.methods.upload - An async method that uploads data to IPFS/Swarm
+     * @param {Function} experiment.methods.download - An async method that downloads data from IPFS/Swarm
      * @return {Promise<string>} A promise which is fulfilled when the experiment ends
      */
-    async run(network, methods) {
+    run(experiment) {
+        const {methods, ...exp} = experiment;
         this.methods = methods;
         // wait for user input to start the experiments
         console.log('\nPress ANY key to start the experiments or CTRL + C to exit')
-        const key = await utils.core.keypress();
-        if (key.ctrl && key.name === 'c') process.exit();
+        utils.core.keypress().then(key => {
+            // if user cancels the experiments exit
+            if (key.ctrl && key.name === 'c') process.exit();
 
-        console.log('I started the experiment');
-        this.socket.emit('start', { network: network.name });
+            // else start the experiment
+            console.log('I started the experiment');
+            this.socket.emit('start', exp);
+
+        });
 
         // this promise will be resolved when the experiment is finished
         return new Promise((resolve, reject) => {
