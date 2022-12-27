@@ -85,6 +85,7 @@ function getExperiments(network, selected) {
     if (ipfsOpt) {
         const ipfs = new ExtendedIpfsExperiment({ retry: true });
         const experiments = getExperiments(ipfs, ipfsOpt);
+        await ipfs.clearRepo();
         
         for (const exp of experiments) {
             for (let i = 0; i < (Number(times) || 1); i++) {

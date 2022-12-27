@@ -1,8 +1,6 @@
 const utils = require('../utils.js');
 const performance = require('perf_hooks').performance;
 const { Bee, BeeDebug } = require("@ethersphere/bee-js");
-const bee = new Bee("http://localhost:1633");
-const beeDebug = new BeeDebug("http://localhost:1635");
 const { CSV } = require('../csvModule.js');
 
 const POSTAGE_STAMPS_AMOUNT = '10000000';
@@ -17,13 +15,15 @@ const OPTIONS = {
         encrypt: false
     },
     downloadOptions: {
-        timeout: 30000,
-        retry: 4
+        timeout: 60000,
+        retry: 0
     }
 };
 
 class SwarmBase {
     name = 'swarm';
+    bee;
+    beeDebug;
     postageBatchId;
     options;
     csv;
@@ -31,27 +31,30 @@ class SwarmBase {
     constructor(opts) {
         // merge the defaultOptions with the input options
         this.options = utils.core.getOptions(opts, OPTIONS, true);
+        this.bee = new Bee("http://localhost:1633");
+        this.beeDebug = new BeeDebug("http://localhost:1635");
+    }
+
+    async findNonExpiredBatch() {
+        try {
+            // check if we have a non expired postageBatch
+            const availableBatches = await this.beeDebug.getAllPostageBatch();
+            for (const batch of availableBatches) {
+                if (batch.batchTTL >= 3600) return batch.batchID;
+            }
+        } catch (error) {
+            // pass
+        }
+        return null;
     }
 
     // TODO: Approximate the amount of data that can be uploaded with this postage batch and notify the user. 
     // Alternatively call this function prior to every upload and calculate if it suffices. If not a new batch should be created
     async configPostageBatch() {
-        const availableBatches = await beeDebug.getAllPostageBatch();
-        let batchId;
-
-        // check if we have a non expired postageBatch
-        if (availableBatches && availableBatches.length >= 0) {
-            for (const batch of availableBatches) {
-                if (batch.batchTTL >= 0) {
-                    batchId = batch.batchID;
-                    console.log('\nUsing batchId:', batchId);
-                    break;
-                }
-            }
-        }
-
+        let batchId = await this.findNonExpiredBatch();
         if (!batchId) {
-            batchId = await beeDebug.createPostageBatch(POSTAGE_STAMPS_AMOUNT, POSTAGE_STAMPS_DEPTH)
+            batchId = await this.beeDebug.createPostageBatch(POSTAGE_STAMPS_AMOUNT, POSTAGE_STAMPS_DEPTH)
+            console.log('\nUsing newly created batchId:', batchId);
         }
         this.postageBatchId = batchId;
     }
@@ -62,7 +65,7 @@ class SwarmBase {
 
         // measure upload latency
         const begin = performance.now();
-        const result = await bee.uploadData(this.postageBatchId, data, localOptions.uploadOptions);
+        const result = await this.bee.uploadData(this.postageBatchId, data, localOptions.uploadOptions);
         const uploadLatency = (performance.now() - begin).toFixed(4);
 
         // set up the upload process's stats
@@ -89,7 +92,7 @@ class SwarmBase {
 
         // measure retrieval latency
         const begin = performance.now();
-        let data = await bee.downloadData(hash, localOptions.downloadOptions);
+        let data = await this.bee.downloadData(hash, localOptions.downloadOptions);
         const retrievalLatency = (performance.now() - begin).toFixed(4);
 
         // set up the download process's stats
