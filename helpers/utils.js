@@ -49,16 +49,29 @@ const core = {
         return new Promise(resolve => setTimeout(resolve, ms));
     },
 
+    // TODO: Allow keypress to be called multiple times. Probably use an array of keypress resolvers and unref stdin only if the arrays length is 0; 
     keypress() {
+        if (this.keypressResolver) throw new Error('There is another keypress promise pending')
+
         return new Promise(resolve => {
+            this.keypressResolver = resolve;
             // Opposite of unref(), calling ref() on a previously unrefed socket will not let the program exit if it's the only socket left
             // We use ref(),unref() to ensure that the program will wait for a keypress but will be able to exit after it 
             process.stdin.ref();
             process.stdin.once('keypress', (str, key) => {
+                delete this.keypressResolver;
                 process.stdin.unref();
                 resolve(key);
             });
         });
+    },
+
+    cancelKeypress() {
+        if (this.keypressResolver) {
+            this.keypressResolver();
+            process.stdin.unref();
+            delete this.keypressResolver;
+        } 
     },
 
     clearCache(){

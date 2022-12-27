@@ -76,6 +76,7 @@ io.on('connection', (socket) => {
     socket.on('start', (experiment) => {
         console.log(`\nUser ${socket.data.user} started the experiment: `, experiment);
         configExperimentData(experiment).then(() => nextRound());
+        io.emit('experiment-started');
     });
 
     socket.on('uploaded', (identifiers) => {

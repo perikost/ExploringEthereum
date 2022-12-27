@@ -26,6 +26,10 @@ module.exports = class Client {
             this.finished('Success');
         });
 
+        this.socket.on('experiment-started', () => {
+            utils.core.cancelKeypress();
+        });
+
         this.socket.on('download', async (round, identifiers) => {
             try {
                 const results = await this.methods.download(identifiers)
@@ -78,6 +82,10 @@ module.exports = class Client {
         // wait for user input to start the experiments
         console.log('\nPress ANY key to start the experiments or CTRL + C to exit')
         utils.core.keypress().then(key => {
+
+            // if keypress is cancelled return
+            if (!key) return;
+
             // if user cancels the experiments exit
             if (key.ctrl && key.name === 'c') process.exit();
 
