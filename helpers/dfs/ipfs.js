@@ -134,15 +134,33 @@ class IpfsBase {
     }
 
     async removeFromRepo(cid) {
-        await this.ipfs.pin.rm(cid);
-        for await (const res of this.ipfs.repo.gc());
+        try {
+            await this.ipfs.pin.rm(cid);
+        } catch (error) {
+            // pin.rm() will fail if the cid isn't pinned.
+            // In that case pass and run garbage collection to remove the item (if it's cached)
+        }
+        await this.clearCache();
+    }
+
+    async clearCache() {
+        for await (const removedDag of this.ipfs.repo.gc()) {
+            if (removedDag.err) console.warn(`Dag ${removedDag.cid.toString()} could not be removed`);
+        }
     }
 
     async clearRepo() {
+        const statsBefore = await this.ipfs.repo.stat();
         for await (const { cid, type } of this.ipfs.pin.ls({ type: 'recursive' })) await this.ipfs.pin.rm(cid);
-        for await (const res of this.ipfs.repo.gc());
-        let stats = await this.ipfs.repo.stat({ human: true });
-        console.log('Cleared my ipfs repo');
+        await this.clearCache();
+
+        // log the accumulative size of the deleted data
+        const statsAfter = await this.ipfs.repo.stat();
+        const diff = Number(statsBefore.repoSize - statsAfter.repoSize);
+        const stringDiff = (diff < 1024 ** 2)
+            ? `${(diff / 1024).toFixed(2)}kb`
+            : `${(diff / 1024 ** 2).toFixed(2)}mb`;
+        console.log(`Cleared my ipfs repo. Deleted approximately ${stringDiff}`);
     }
 
     async findContentProvs(cid, timeout = 60000) {
