@@ -28,6 +28,18 @@ const experiments = [
         })
     },
     {
+        name: 'normal-disconnect',
+        description: 'For each round one node will upload a series of content and the rest of the nodes will download it. Since the connection with the uploader isn\'t terminated instantly, the downloader (after getting the content) will disconnect from the peer from which they got it.',
+        networks: ['ipfs'],
+        methods: (network) => ({
+            upload: async () => ({
+                ids: await network.uploadStrings(options),
+                from: await network.getId()
+            }),
+            download: data => network.downloadDisconnect(data.ids, data.from)
+        })
+    },
+    {
         name: 'download-from-uploader',
         description: 'For each round one node will upload a series of content and the rest of the nodes will download it. Each downloader, after getting the content will remove it from local storage. This will ensure that content is always retrieved from the uploader. In addition, since the connection with the uploader isn\'t terminated instantly, the downloader (after getting the content) will disconnect from the peer from which they got it.',
         networks: ['ipfs'],
@@ -37,6 +49,15 @@ const experiments = [
                 from: await network.getId()
             }),
             download: data => network.downloadRemoveDisconnect(data.ids, data.from)
+        })
+    },
+    {
+        name: 'download-from-uploader-simple',
+        description: 'For each round one node will upload a series of content and the rest of the nodes will download it. Each downloader, after getting the content will remove it from local storage. This will ensure that content is always retrieved from the uploader.',
+        networks: ['ipfs'],
+        methods: (network) => ({
+            upload: () => network.uploadStrings(options),
+            download: ids => network.downloadRemove(ids)
         })
     }
 ]

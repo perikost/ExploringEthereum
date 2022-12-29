@@ -141,6 +141,20 @@ class ExtendedIpfsExperiment extends Experiment(IpfsBase) {
         return stats;
     }
 
+    async downloadDisconnect(ids, uploader, options = null) {
+        utils.core.setOptions(options, this.options);
+
+        const stats = [];
+        for (const id of ids) {
+            const result = await this.download(id);
+            stats.push((result && result.stats) || null);
+
+            // disconnect from the node that uploaded the content
+            await this.disconnectFromPeer(uploader);
+        }
+        return stats;
+    }
+
     async downloadRemoveDisconnect(ids, uploader, options = null) {
         utils.core.setOptions(options, this.options);
 
