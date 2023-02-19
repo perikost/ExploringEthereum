@@ -3,7 +3,7 @@ const IpfsBase = require('./ipfs');
 const SwarmBase = require('./swarm.js');
 
 const OPTIONS = {
-    retry: false,
+    retry: 0,
     clearCache: false,
     data: {
         start: '4kb',
@@ -34,22 +34,30 @@ function Experiment(Base) {
                 } catch (error) {
                     console.log('\n', `An error ocurred while executing ${method.name}().`, error.toString());
                     console.log('Press ANY key to retry, CTRL + C to abort the experiments or ENTER to skip current execution');
-                    const key = await utils.core.keypress();
+                    const key = await utils.core.keypress(10);
 
-                    // return null on CTRL + ENTER so that the experiments can continue
-                    if (key.name === 'return') {
-                        console.log('Skipping...');
-                        return null;
-                    }
+                    if (key) {
+                        // return on CTRL + ENTER so that the experiments can continue
+                        if (key.name === 'return') {
+                            console.log('Skipping...');
+                            return;
+                        }
 
-                    // rethrow the error on ctrl + C
-                    if (key.ctrl && key.name === 'c') {
-                        console.log('Aborting...');
-                        throw error;
+                        // rethrow the error on ctrl + C
+                        if (key.ctrl && key.name === 'c') {
+                            console.log('Aborting...');
+                            throw error;
+                        }
                     }
 
                     console.log('Retrying...');
                     errorCount++;
+
+                    // return when max tries are exceeded so that the experiments can continue
+                    if (this.options.retry === errorCount) {
+                        console.log('Exceeded max tries. Skipping...');
+                        return;
+                    }
                 }
             }
         }

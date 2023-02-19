@@ -8,6 +8,8 @@ program
     .option('-i, --ip <string>', 'The ip of the server (default localhost)')
     .option('-p, --port <number>', 'The port of the server (default: 3000)')
     .option('-t, --times <number>', 'The number of times the experiments are gonna be executed (default 1). You can exit with CTRL + C at any time')
+    .option('-r, --retries <number>', 'The number of times each function is re-executed upon error (default 3). You can stop the re-execution with CTRL + C at any time')
+
 program.parse();
 
 const options = {
@@ -79,11 +81,11 @@ function getExperiments(network, selected) {
 }
 
 (async () => {
-    const { ipfs: ipfsOpt, swarm: swarmOpt, ip, port, times } = program.opts();
+    const { ipfs: ipfsOpt, swarm: swarmOpt, ip, port, times, retries } = program.opts();
     const client = new Client(ip, port);
 
     if (ipfsOpt) {
-        const ipfs = new ExtendedIpfsExperiment({ retry: true });
+        const ipfs = new ExtendedIpfsExperiment({ retry: Number(retries) || 3 });
         const experiments = getExperiments(ipfs, ipfsOpt);
         await ipfs.clearRepo();
         
@@ -95,7 +97,7 @@ function getExperiments(network, selected) {
     }
 
     if (swarmOpt) {
-        const swarm = new SwarmExperiment({ retry: true });
+        const swarm = new SwarmExperiment({ retry: Number(retries) || 3 });
         const experiments = getExperiments(swarm, swarmOpt)
 
         for (const exp of experiments) {
