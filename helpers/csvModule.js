@@ -147,7 +147,7 @@ function chooseRootFolder(rootFolder){
 }
 
 function createRootFolder(rootFolder){
-    rootFolder = path.join(rootFolder, new Date().toLocaleDateString('pt-PT').replaceAll('/', '-'))
+    rootFolder = path.join(rootFolder, new Date().toLocaleDateString('pt-PT').replace(/\//g, '-'))
     if(!fs.existsSync(rootFolder)){
         fs.mkdirSync(rootFolder, { recursive: true });
         return rootFolder;
