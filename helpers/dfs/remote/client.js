@@ -20,7 +20,39 @@ module.exports = class Client {
         this._registerEvents();
     }
 
+    _start(interactive = false) {
+        const start = () => {
+            console.log('I started the experiment');
+            this.socket.emit('start', this.exp);
+        }
+
+        if (interactive) {
+            // wait for user input to start the experiments
+            console.log('\nPress ANY key to start the experiments or CTRL + C to exit')
+            utils.core.keypress().then(key => {
+
+                // if keypress is cancelled return
+                if (!key) return;
+
+                // if user cancels the experiments exit
+                if (key.ctrl && key.name === 'c') process.exit();
+
+                // else start the experiment
+                start();
+            });
+        } else {
+            start();
+        }
+    }
+
     _registerEvents() {
+        this.socket.on('automated-start', () => {
+            this._start();
+        });
+
+        this.socket.on('interactive-start', () => {
+            this._start(true);
+        });
 
         this.socket.on('experiment-finished', () => {
             this.finished('Success');
@@ -79,21 +111,8 @@ module.exports = class Client {
     run(experiment) {
         const {methods, ...exp} = experiment;
         this.methods = methods;
-        // wait for user input to start the experiments
-        console.log('\nPress ANY key to start the experiments or CTRL + C to exit')
-        utils.core.keypress().then(key => {
-
-            // if keypress is cancelled return
-            if (!key) return;
-
-            // if user cancels the experiments exit
-            if (key.ctrl && key.name === 'c') process.exit();
-
-            // else start the experiment
-            console.log('I started the experiment');
-            this.socket.emit('start', exp);
-
-        });
+        this.exp = exp;
+        this.socket.emit('running')
 
         // this promise will be resolved when the experiment is finished
         return new Promise((resolve, reject) => {

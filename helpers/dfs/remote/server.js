@@ -1,9 +1,19 @@
 const { Server } = require('socket.io');
 const { CSV } = require('../../csvModule.js');
 const csv = new CSV();
-const { program } = require('commander');
+const { program, InvalidArgumentError } = require('commander');
 
-program.option('-p, --port <number>', 'The port of the server');
+function parseConnections(value) {
+    const parsedValue = parseInt(value, 10);
+    if (isNaN(parsedValue) || parsedValue < 2) {
+        throw new InvalidArgumentError('The experiment cannot run with less than 2 clients.');
+    }
+    return parsedValue;
+}
+
+program.option('-p, --port [number]', 'The port of the server');
+program.option('-c, --connections [number]', 'The number of clients expected to connect', parseConnections);
+program.option('-a, --auto', 'Start the experiment when all clients are connected');
 program.parse();
 
 const ROUND = {
@@ -22,6 +32,7 @@ const EXPERIMENT = {
     totalRounds: 0
 };
 
+
 /**
 * Configures the experiment's initial data
 * @param {Object} experiment - Basic info about the experiment provided by the client that started the experiment.
@@ -38,6 +49,10 @@ async function configExperimentData(experimentInfo) {
         socket: socket.id,
     }));
     experiment.totalRounds = experiment.workers.length;
+}
+
+function forceStart() {
+    io.fetchSockets().then(sockets => io.to(sockets[0].id).emit('automated-start'));
 }
 
 function nextRound() {
@@ -64,15 +79,34 @@ function writeRoundResults(workers) {
 }
 
 
-const { port } = program.opts();
+const { port, auto, connections } = program.opts();
 const io = new Server(port || 3000);
+
+if (auto && !connections) throw new Error('Can\'t start in auto mode. Specify the number of clients that are expected to connect with the --connections option.')
 let experiment;
+let runningClients = 0;
 
 io.on('connection', (socket) => {
     socket.data.user = socket.handshake.auth.user;
-
-    // console log the connection
     console.log(`User ${socket.data.user} connected`);
+
+    socket.on("disconnect", () => {
+        if (runningClients) runningClients--;
+    });
+
+    socket.on('running', () => {
+        if (auto) {
+            runningClients++;
+
+            // force start the experiment if all nodes are running
+            if (runningClients === connections) {
+                forceStart();
+                runningClients = 0;
+            }
+        } else {
+            io.to(socket.id).emit('interactive-start');
+        }
+    })
 
     socket.on('start', (experiment) => {
         console.log(`\nUser ${socket.data.user} started the experiment: `, experiment);
