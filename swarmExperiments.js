@@ -6,9 +6,6 @@ const { SwarmExperiment } = require('./helpers/dfs/experiments');
 (async () => {
     const swarm = new SwarmExperiment({ keepStats: true, data: {start: '4kb', maxStringSize: '16kb'} });
 
-    // Config the postageBatch. Needed for uploading data. 
-    await swarm.configPostageBatch();
-
     // upload
     await swarm.loopUpload(1);
 

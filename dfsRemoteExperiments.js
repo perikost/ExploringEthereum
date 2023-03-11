@@ -1,5 +1,5 @@
 const Client = require('./helpers/dfs/remote/client');
-const { SwarmExperiment, ExtendedIpfsExperiment } = require('./helpers/dfs/experiments');
+const { ExtendedSwarmExperiment, ExtendedIpfsExperiment } = require('./helpers/dfs/experiments');
 const { program } = require('commander');
 
 function parseIntOption(value) {
@@ -113,12 +113,11 @@ function getExperiments(network, selected) {
     }
 
     if (swarmOpt) {
-        const swarm = new SwarmExperiment({ retry: retries });
+        const swarm = new ExtendedSwarmExperiment({ retry: retries });
         const experiments = getExperiments(swarm, swarmOpt)
 
         for (const exp of experiments) {
             for (let i = 0; i < times; i++) {
-                await swarm.configPostageBatch();
                 await client.run(exp).catch(console.log);;
             }
         }
