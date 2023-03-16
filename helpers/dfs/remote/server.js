@@ -2,6 +2,8 @@ const { Server } = require('socket.io');
 const { CSV } = require('../../csvModule.js');
 const csv = new CSV();
 const { program, InvalidArgumentError } = require('commander');
+const IpfsBase = require('../ipfs');
+const SwarmBase = require('../swarm');
 
 function parseConnections(value) {
     const parsedValue = parseInt(value, 10);
@@ -78,9 +80,25 @@ function writeRoundResults(workers) {
     }
 }
 
+async function nodeIsReachable(address, network) {
+    try {
+        if (networks.hasOwnProperty(network) && address) {
+            if (!await networks[network].peerReachable(address)) throw new Error(`Node ${address} is not reachable in ${network} network`)
+        }
+        return true;
+    } catch (error) {
+        console.log(error.toString());
+    }
+}
+
 
 const { port, auto, connections } = program.opts();
 const io = new Server(port || 3000);
+const networks = {
+    ipfs: new IpfsBase(),
+    swarm: new SwarmBase()
+}
+
 
 if (auto && !connections) throw new Error('Can\'t start in auto mode. Specify the number of clients that are expected to connect with the --connections option.')
 let experiment;
@@ -89,12 +107,20 @@ let runningClients = 0;
 io.on('connection', (socket) => {
     socket.data.user = socket.handshake.auth.user;
     console.log(`User ${socket.data.user} connected`);
-
+    
     socket.on("disconnect", () => {
-        if (runningClients) runningClients--;
+        if (runningClients && socket.data.participant) runningClients--;
     });
 
-    socket.on('running', () => {
+    socket.on('running', async (exp) => {
+        // If the address of the node is given, check if the node is reachable 
+        // If it's not, declare the node as a non-participant and return 
+        if (exp.nodeAddress && exp.network && !await nodeIsReachable(exp.nodeAddress, exp.network)) {
+            io.to(socket.id).emit('error', `Could not connect to your ${exp.network} address.`);
+            socket.data.participant = false;
+            return;
+        }
+
         if (auto) {
             runningClients++;
 
@@ -106,6 +132,7 @@ io.on('connection', (socket) => {
         } else {
             io.to(socket.id).emit('interactive-start');
         }
+        socket.data.participant = true;
     })
 
     socket.on('start', (experiment) => {

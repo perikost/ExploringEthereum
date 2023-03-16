@@ -89,9 +89,9 @@ module.exports = class Client {
             }
         });
 
-        this.socket.on('error', () => {
+        this.socket.on('error', (errorMessage = 'Failure') => {
             this.socket.disconnect();
-            this.failed('Failure');
+            this.failed(errorMessage);
         })
     }
 
@@ -103,6 +103,7 @@ module.exports = class Client {
      * @param {string} experiment.name - The name of the experiment
      * @param {string} experiment.description - A description of the experiment
      * @param {string} experiment.network - The network on which the experiment is executed
+     * @param {string} experiment.nodeAddress - The address of the node in the network
      * @param {Object} experiment.methods - The necessary methods to run the experiments
      * @param {Function} experiment.methods.upload - An async method that uploads data to IPFS/Swarm
      * @param {Function} experiment.methods.download - An async method that downloads data from IPFS/Swarm
@@ -112,7 +113,7 @@ module.exports = class Client {
         const {methods, ...exp} = experiment;
         this.methods = methods;
         this.exp = exp;
-        this.socket.emit('running')
+        this.socket.emit('running', exp);
 
         // this promise will be resolved when the experiment is finished
         return new Promise((resolve, reject) => {

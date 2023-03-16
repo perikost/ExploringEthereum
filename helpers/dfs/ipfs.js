@@ -182,7 +182,7 @@ class IpfsBase {
         return providers;
     }
 
-    async disconnectFromPeer(peerId, timeout = 6000) {
+    async disconnectFromPeer(peerId, timeout = 60000) {
         try {
             const peerInfos = await this.ipfs.swarm.peers({timeout: timeout});
             const connected = peerInfos.find(peer => peer.peer === peerId);
@@ -204,6 +204,16 @@ class IpfsBase {
         for (const provider of providers) {
             await this.disconnectFromPeer(provider);
         }
+    }
+
+    async peerReachable(peer, timeout = 10000, count = 5) {
+        let reachable = true;
+        if (await this.getId() !== peer) {
+            for await (const res of this.ipfs.ping(peer, { count: count, timeout: timeout })) {
+                if (!res.success) reachable = false;
+            }
+        }
+        return reachable
     }
 }
 

@@ -103,9 +103,11 @@ function getExperiments(network, selected) {
     if (ipfsOpt) {
         const ipfs = new ExtendedIpfsExperiment({ retry: retries });
         const experiments = getExperiments(ipfs, ipfsOpt);
+        const address = await ipfs.getId();
         await ipfs.clearRepo();
         
         for (const exp of experiments) {
+            exp.nodeAddress = address;
             for (let i = 0; i < times; i++) {
                 await client.run(exp).catch(console.log);
             }

@@ -170,6 +170,11 @@ class SwarmBase {
                 .end();
         })
     }
+
+    async peerReachable(peer) {
+        if (await this.getId() === peer) return true;
+        return this.beeDebug.pingPeer(peer).then(() => true).catch(() => false);
+    }
 }
 
 
