@@ -40,7 +40,7 @@ const OPTIONS = {
         progress: null // e.g., (prog) => console.log(prog)
     },
     downloadOptions: {
-        timeout: 60000
+        timeout: 30000
     }
 };
 

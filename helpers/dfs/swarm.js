@@ -16,7 +16,7 @@ const OPTIONS = {
         encrypt: false
     },
     downloadOptions: {
-        timeout: 60000,
+        timeout: 30000,
         retry: 0
     }
 };
