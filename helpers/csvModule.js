@@ -1,4 +1,5 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const assert = require('assert');
 const prompt = require('prompt-sync')({sigint: true});
@@ -91,9 +92,9 @@ class CSV {
         // toWrite.unshift(fileName) to push something in the begining. Used to write extra field in swarm
 
         if(!fs.existsSync(this.folderPath)) fs.mkdirSync(this.folderPath, { recursive: true });
-        if(!fs.existsSync(this.csvPath)) fs.writeFileSync(this.csvPath, this.headers.toString() + '\n');
+        if(!fs.existsSync(this.csvPath)) fs.writeFileSync(this.csvPath, this.headers.toString() + os.EOL);
 
-        fs.appendFileSync(this.csvPath, this.toWrite.toString() + '\n');
+        fs.appendFileSync(this.csvPath, this.toWrite.toString() + os.EOL);
     }
 }
 
@@ -182,7 +183,7 @@ function addNote(folder){
         let note = prompt('Peaseyour note...  ');
         if(note){
             note = new Date().toString().slice(0,24) + '\t' + note;
-            fs.appendFileSync(file, note + '\n');
+            fs.appendFileSync(file, note + os.EOL);
         }
     }
     
@@ -265,7 +266,7 @@ function csvAverage(csv, filePath) {
 
     // append column average to the csv
     let toWrite = headers.map(header => avrg[header] ? avrg[header].average : '');
-    fs.appendFileSync(filePath, toWrite.toString() + '\n');
+    fs.appendFileSync(filePath, toWrite.toString() + os.EOL);
 }
 
 
@@ -289,5 +290,6 @@ function average(filePath){
 module.exports = {
     CSV,
     average,
-    readCsvAsArray
+    readCsvAsArray,
+    readLines
 };
