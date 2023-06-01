@@ -3,46 +3,45 @@ const path = require('path');
 
 const STATE = {
     event: '',
-    status: 'waiting', // received, executed, sent, errored (only when errored will load the old one)
+    status: '',
     args: [],
-    action: '' // upload, download
+    round: null,
+    response: ''
 }
 
-// module.exports = class State {
-//     got;
-//     sent;
-
-//     constructor() {
-//         this.got = JSON.parse(JSON.stringify(STATE));
-//         this.sent = JSON.parse(JSON.stringify(STATE));
-//     }
-// }
 
 class SingleStateStore {
-    #event = ''
-    #status = 'waiting' // received, executed, sent/completed, errored (only when errored will load the old one)
-    #args = []
-    #action = '' // upload, download
     #root
     #path;
     #temp;
 
-    constructor(root, file = 'temp.json', folder = './.state') {
+    constructor(file = 'temp.json', root = null, initialState = STATE, folder = './.state') {
         this.#root = root;
         this.#path = path.join(folder, file);
-        this.loadState();
+        this.loadState(JSON.parse(JSON.stringify(initialState)));
 
         //  register setters/getters for all properties of the state;
         for (const key in this.#temp) {
-            this[key] = (prop) => {
-                if (prop) {
-                    this.#temp[key] = prop;
-                    return this.saveState();
-                } else {
-                    return this.#temp[key];
-                }
+            this.addGetterSetter(key)
+        }
+    }
+
+    addGetterSetter(key) {
+        this[key] = (val) => {
+            if (typeof val !== 'undefined') {
+                this.#temp[key] = val;
+                this.saveState();
+                return this;
+            } else {
+                return this.#temp[key];
             }
         }
+    }
+
+    extend(key, val = '') {
+        if (!this.hasOwnProperty(key)) this.addGetterSetter(key);
+        this[key](val);
+        return this;
     }
 
     get() {
@@ -53,89 +52,88 @@ class SingleStateStore {
         for (const key in state) {
             if (key in this.#temp) this.#temp[key] = state[key];
         }
-        return this.saveState();
+        this.saveState();
+        return this;
     }
 
     saveState() {
         const folderPath = path.dirname(this.#path);
         if (!fs.existsSync(folderPath)) fs.mkdirSync(folderPath, { recursive: true });
-        fs.writeFileSync(this.#path, JSON.stringify(this.get(), null, 4));
+
+        let toWrite = {};
+        if (this.#root) {
+            if (fs.existsSync(this.#path)) {
+                toWrite = JSON.parse(fs.readFileSync(this.#path));
+            }
+            toWrite[this.#root] = this.get();
+        } else {
+            toWrite = this.get();
+        }
+        fs.writeFileSync(this.#path, JSON.stringify(toWrite, null, 2));
         return this;
     }
 
-    loadState() {
-        this.#temp = fs.existsSync(this.#path)
-            ? JSON.parse(fs.readFileSync(this.#path))
-            : JSON.parse(JSON.stringify(STATE));
+    loadState(initialState) {
+        if (fs.existsSync(this.#path)) {
+            const state = JSON.parse(fs.readFileSync(this.#path));
+            this.#temp = this.#root
+                ? state[this.#root] || initialState
+                : state;
+        } else {
+            this.#temp = initialState;
+        }
+    }
+
+    clear() {
+        if (fs.existsSync(this.#path)) {
+            fs.rmSync(this.#path);
+        }
     }
 }
 
 class MultiStateStore {
-    got;
-    sent;
+    #file;
+    #folder;
+    #path;
+    #initialState;
+    #states = {};
 
-    constructor(file = 'client.json', folder = './.state') {
-        this.got = new SingleStateStore();
-        this.sent = new SingleStateStore();
+    constructor(file = 'client.json', folder = './.state', initialState = STATE) {
+        this.#folder = folder;
+        this.#file = file
+        this.#initialState = initialState;
+        this.#path = path.join(this.#folder, this.#file);
+        this.loadState();
+    }
+
+    add(id) {
+        this.#states[id] = new SingleStateStore(this.#file, id, this.#initialState, this.#folder);
+        return this.#states[id];
+    }
+
+    get(id) {
+        return this.#states[id];
+    }
+
+    clear() {
+        if (fs.existsSync(this.#path)) {
+            fs.rmSync(this.#path);
+        }
+    }
+
+    loadState() {
+        if (fs.existsSync(this.#path)) {
+            const state = JSON.parse(fs.readFileSync(this.#path));
+            for (const key in state) {
+                this.add(key);
+            }
+        }
     }
 }
 
 module.exports = {
-    SingleStateStore
+    SingleStateStore,
+    MultiStateStore,
+    STATE: JSON.parse(JSON.stringify(STATE))
 }
 
-// class ClientStateStore extends SingleStateStore {
-//     got;
-//     sent;
-
-//     constructor(file = 'client.json', folder = './.state') {
-//         this.got = new SingleStateStore();
-//         this.sent = new SingleStateStore();
-//     }
-// }
-
-// module.exports = class StateStore {
-//     got;
-//     sent;
-
-//     constructor() {
-//         this.got = new State();
-//         this.sent = new State();
-//     }
-// }
-
-    // event(name) {
-    //     if (name) {
-    //         this.#event = name;
-    //         return this;
-    //     } else {
-    //         return this.#event;
-    //     }
-    // }
-
-    // status(status) {
-    //     if (status) {
-    //         this.#status = status;
-    //         return this;
-    //     } else {
-    //         return this.#status;
-    //     }
-    // }
-
-    // args(args) {
-    //     if (args) {
-    //         this.#args = args;
-    //         return this;
-    //     } else {
-    //         return this.#args;
-    //     }
-    // }
-
-    // action(action) {
-    //     if (action) {
-    //         this.#action = action;
-    //         return this;
-    //     } else {
-    //         return this.#action;
-    //     }
-    // }
