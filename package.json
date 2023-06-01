@@ -4,8 +4,7 @@
   "description": "",
   "main": "interact.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "node helpers/dfs/remote/server.js",
+    "test": "jest --runInBand",
     "remote-experiments": "node dfsRemoteExperiments.js",
     "decrypt": "node helpers/decryptAccount.js"
   },
@@ -29,5 +28,8 @@
     "socket.io": "^4.5.2",
     "socket.io-client": "^4.5.2",
     "web3": "^1.7.3"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0"
   }
 }
