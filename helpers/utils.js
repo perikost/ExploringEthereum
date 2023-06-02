@@ -179,6 +179,23 @@ const core = {
             if (stepOp == '*') i *= step;
         }
         return randomStrings;
+    },
+
+    id() {
+        if (process.env.ID) return process.env.ID;
+
+        const id = new Date().getTime().toString();
+        const envVar = `ID = ${id}`
+
+        if (fs.existsSync('.env')) {
+            const envVars = fs.readFileSync('.env', 'utf-8').split(os.EOL).filter(envVar => !!envVar);
+            envVars.push(envVar)
+            fs.writeFileSync('.env', envVars.join(os.EOL));
+        } else {
+            fs.writeFileSync('.env', envVar);
+        }
+
+        return id;
     }
 }
 
