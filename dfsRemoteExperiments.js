@@ -161,10 +161,12 @@ function updateExperimentState(experiment, network) {
         if (swarmOpt) {
             swarm = new ExtendedSwarmExperiment({ retry: retries });
             const experiments = getExperiments(swarm, swarmOpt)
+            const address = await swarm.getId();
 
             loadExperimentsState(experiments, times, 'swarm')
 
             for (const exp of experiments) {
+                exp.nodeAddress = address;
                 for (let i = 0; i < exp.times; i++) {
                     await client.run(exp).catch(console.log);
                     updateExperimentState(exp, 'swarm')
