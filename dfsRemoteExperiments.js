@@ -1,6 +1,8 @@
 const Client = require('./helpers/dfs/remote/client');
 const { ExtendedSwarmExperiment, ExtendedIpfsExperiment } = require('./helpers/dfs/experiments');
 const { program } = require('commander');
+const { MultiStateStore } = require('./helpers/dfs/remote/state');
+const utils = require('./helpers/utils');
 
 function parseIntOption(value) {
     const parsedValue = parseInt(value, 10);
@@ -25,6 +27,9 @@ program
 
 program.parse();
 
+const initialState = { experiments: [], times: 0 };
+const state = new MultiStateStore(`experiments_${utils.core.id()}`, '.state', initialState)
+
 const userOptions = program.opts();
 const options = {
     data: {
@@ -35,7 +40,7 @@ const options = {
     }
 };
 
-const experiments = [
+const EXPERIMENTS = [
     {
         name: 'normal',
         description: 'For each round one node will upload a series of content and the rest of the nodes will download it. Given that the content is replicated amongst the nodes that download it, all nodes except from the first one that downloads it might get the content from a node other than the uploader (uploader = responsible nodes in case of swarm).',
@@ -85,7 +90,7 @@ function getExperiments(network, selected) {
     selected = Array.isArray(selected) && selected;
  
     const exps = []
-    for (const exp of experiments) {
+    for (const exp of EXPERIMENTS) {
         const {networks, methods, ...rest} = exp;
         if (networks.includes(network.name) && (!selected || selected.includes(exp.name))) {
             rest.methods = methods(network);
@@ -96,33 +101,81 @@ function getExperiments(network, selected) {
     return exps;
 }
 
+
+function loadExperimentsState(experiments, times, network) {
+    if (!state.get(network)) {
+        state.add(network).experiments(experiments.map(exp => ({name: exp.name, executed: 0})));
+        state.add(network).times(times);
+        experiments.forEach(exp => exp.times = times);
+    } else {
+        for (let i = 0; i < experiments.length; i++) {
+            const experiment = experiments[i];
+            const failedExperiment = state.get(network).experiments().find(exp => exp.name === experiment.name)
+            
+            if (failedExperiment) {
+                experiment.times = times - failedExperiment.executed;
+            } else {
+                experiments.splice(i, 1);
+                i--;
+            }
+        }
+    }
+}
+
+
+function updateExperimentState(experiment, network) {
+    const experiments = state.get(network).experiments();
+    for (const [index, exp] of experiments.entries()) {
+        if (exp.name === experiment.name) {
+            if (++exp.executed === state.get(network).times()) experiments.splice(index, 1)
+            break
+        }
+    }
+    state.get(network).experiments(experiments);
+}
+
+
 (async () => {
     const { ipfs: ipfsOpt, swarm: swarmOpt, ip, port, times, retries } = userOptions;
     const client = new Client(ip, port);
 
-    if (ipfsOpt) {
-        const ipfs = new ExtendedIpfsExperiment({ retry: retries });
-        const experiments = getExperiments(ipfs, ipfsOpt);
-        const address = await ipfs.getId();
-        await ipfs.clearRepo();
-        
-        for (const exp of experiments) {
-            exp.nodeAddress = address;
-            for (let i = 0; i < times; i++) {
-                await client.run(exp).catch(console.log);
+    let ipfs, swarm;
+
+    try {
+        if (ipfsOpt) {
+            ipfs = new ExtendedIpfsExperiment({ retry: retries });
+            const experiments = getExperiments(ipfs, ipfsOpt);
+            const address = await ipfs.getId();
+
+            loadExperimentsState(experiments, times, 'ipfs')
+
+            for (const exp of experiments) {
+                exp.nodeAddress = address;
+                for (let i = 0; i < exp.times; i++) {
+                    await client.run(exp).catch(console.log);
+                    updateExperimentState(exp, 'ipfs')
+                }
             }
         }
-    }
 
-    if (swarmOpt) {
-        const swarm = new ExtendedSwarmExperiment({ retry: retries });
-        const experiments = getExperiments(swarm, swarmOpt)
+        if (swarmOpt) {
+            swarm = new ExtendedSwarmExperiment({ retry: retries });
+            const experiments = getExperiments(swarm, swarmOpt)
 
-        for (const exp of experiments) {
-            for (let i = 0; i < times; i++) {
-                await client.run(exp).catch(console.log);;
+            loadExperimentsState(experiments, times, 'swarm')
+
+            for (const exp of experiments) {
+                for (let i = 0; i < exp.times; i++) {
+                    await client.run(exp).catch(console.log);
+                    updateExperimentState(exp, 'swarm')
+                }
             }
         }
+
+        state.clear();
+        if (ipfs) await ipfs.clearRepo();
+    } catch (error) {
+        console.log(error);
     }
 
     client.disconnect();
