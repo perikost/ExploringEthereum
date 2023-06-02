@@ -5,6 +5,7 @@
   "main": "interact.js",
   "scripts": {
     "test": "jest --runInBand",
+    "server": "node helpers/dfs/remote/run-server.js",
     "remote-experiments": "node dfsRemoteExperiments.js",
     "decrypt": "node helpers/decryptAccount.js"
   },

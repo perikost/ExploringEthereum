@@ -1,23 +1,47 @@
 
+require('dotenv').config();
+const fs = require("fs");
 const { io } = require('socket.io-client');
 const os = require('os')
 const utils = require('../../utils');
-
+const { SingleStateStore } = require('./state');
 
 module.exports = class Client {
     socket;
     methods;
     finished;
     failed;
+    state;
 
-    constructor(ip, port) {
+    constructor(ip, port, id, user) {
         const destination = `http://${ip || 'localhost'}:${port || 3000}`
+        this.user = user || process.env.USER_NAME || os.hostname();
+        this.id = id || this._id();
+        this.state = new SingleStateStore(`client_${this.id}.json`)
         this.socket = io(destination, {
             auth: {
-                user: os.hostname()
+                user: this.user,
+                id: this.id
             }
         });
         this._registerEvents();
+    }
+
+    _id() {
+        if (process.env.ID) return process.env.ID;
+
+        const id = new Date().getTime().toString();
+        const envVar = `ID = ${id}`
+
+        if (fs.existsSync('.env')) {
+            const envVars = fs.readFileSync('.env', 'utf-8').split(os.EOL).filter(envVar => !!envVar);
+            envVars.push(envVar)
+            fs.writeFileSync('.env', envVars.join(os.EOL));
+        } else {
+            fs.writeFileSync('.env', envVar);
+        }
+
+        return id;
     }
 
     _start(interactive = false) {
@@ -55,18 +79,28 @@ module.exports = class Client {
         });
 
         this.socket.on('experiment-finished', () => {
+            this.state.clear();
             this.finished('Success');
         });
 
-        this.socket.on('experiment-started', () => {
+        this.socket.on('experiment-started', (ack) => {
             utils.core.cancelKeypress();
+            ack()
         });
 
         this.socket.on('download', async (round, identifiers) => {
             try {
-                const results = await this.methods.download(identifiers)
-                console.log('\n' + `Round ${round}: I downloaded the data`);
-                this.socket.emit('downloaded', { results: results })
+                // if content is already downloaded return the cached results, else download it
+                if (this.state.event() === 'downloaded' && this.state.round() === round) {
+                    this.socket.emit(this.state.event(), ...this.state.args())
+                } else {
+                    const results = await this.methods.download(identifiers)
+                    this.state.event('downloaded').args([{results}]).round(round);
+                    console.log('\n' + `Round ${round}: I downloaded the data`);
+
+                    await utils.core.sleep(1)
+                    this.socket.emit('downloaded', ...this.state.args())
+                }
             } catch (error) {
                 console.log('Could not download one of', identifiers)
                 console.log(error)
@@ -76,13 +110,20 @@ module.exports = class Client {
 
         this.socket.on('upload', async (round) => {
             try {
-                const results = await this.methods.upload();
-                console.log(`Round ${round}: I uploaded the data`);
+                // if content is already uploaded return the cached identifiers, else upload it
+                if (this.state.event() === 'uploaded' && this.state.round() === round) {
+                    // if (process.env.ID == 1680040960121) process.exit();
+                    this.socket.emit('uploaded', ...this.state.args())
+                } else {
+                    const results = await this.methods.upload();
+                    this.state.event('uploaded').args([results]).round(round);
+                    console.log(`Round ${round}: I uploaded the data`);
 
-                // if data is downloaded instantly a timeout error is thrown
-                // wait a minute for the data to reach the nodes responsible for storing it (swarm: area of responsibility)
-                await utils.core.sleep(60);
-                this.socket.emit('uploaded', results)
+                    // if data is downloaded instantly a timeout error is thrown
+                    // wait a minute for the data to reach the nodes responsible for storing it (swarm: area of responsibility)
+                    await utils.core.sleep(30);
+                    this.socket.emit('uploaded', ...this.state.args())
+                }
             } catch (error) {
                 console.log(error)
                 this.socket.emit('client-error', error.toString());
