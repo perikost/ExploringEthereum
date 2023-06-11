@@ -9,7 +9,6 @@ function parseIntOption(value) {
     if (isNaN(parsedValue)) {
         throw new InvalidArgumentError('Not an integer.');
     }
-    console.log(value, parsedValue)
     return parsedValue;
 }
 
@@ -152,7 +151,7 @@ function updateExperimentState(experiment, network) {
             for (const exp of experiments) {
                 exp.nodeAddress = address;
                 for (let i = 0; i < exp.times; i++) {
-                    await client.run(exp).catch(console.log);
+                    await client.run(exp);
                     updateExperimentState(exp, 'ipfs')
                 }
             }
@@ -168,7 +167,7 @@ function updateExperimentState(experiment, network) {
             for (const exp of experiments) {
                 exp.nodeAddress = address;
                 for (let i = 0; i < exp.times; i++) {
-                    await client.run(exp).catch(console.log);
+                    await client.run(exp);
                     updateExperimentState(exp, 'swarm')
                 }
             }
