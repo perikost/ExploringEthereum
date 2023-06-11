@@ -12,6 +12,7 @@ const shell = require('shelljs');
 const { CID } = require('multiformats/cid');
 const assert = require('assert');
 const readline = require('readline');
+const os = require('os')
 
 readline.emitKeypressEvents(process.stdin);
 if (process.stdin.isTTY) process.stdin.setRawMode(true);
