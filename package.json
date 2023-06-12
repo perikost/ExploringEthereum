@@ -7,7 +7,8 @@
     "test": "jest --runInBand",
     "server": "node helpers/dfs/remote/run-server.js",
     "remote-experiments": "node dfsRemoteExperiments.js",
-    "decrypt": "node helpers/decryptAccount.js"
+    "decrypt": "node helpers/decryptAccount.js",
+    "clear-ipfs-repo": "node clearIPFSRepo.js"
   },
   "author": "",
   "license": "ISC",
