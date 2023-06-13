@@ -13,7 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@ethersphere/bee-js": "^5.0.0",
+    "@ethersphere/bee-js": "^6.0.0",
     "@truffle/hdwallet-provider": "^2.0.4",
     "bs58": "^5.0.0",
     "colors": "^1.4.0",
