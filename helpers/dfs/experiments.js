@@ -182,8 +182,8 @@ class ExtendedIpfsExperiment extends Experiment(IpfsBase) {
 
 class ExtendedSwarmExperiment extends Experiment(SwarmBase) {
 
-    constructor() {
-        super();
+    constructor(opts) {
+        super(opts);
     }
 
     async downloadRemove(ids, options = null) {
