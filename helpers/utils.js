@@ -188,6 +188,8 @@ const core = {
         const id = new Date().getTime().toString();
         const envVar = `ID = ${id}`
 
+        process.env.ID = String(id);
+
         if (fs.existsSync('.env')) {
             const envVars = fs.readFileSync('.env', 'utf-8').split(os.EOL).filter(envVar => !!envVar);
             envVars.push(envVar)

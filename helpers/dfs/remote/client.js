@@ -32,6 +32,8 @@ module.exports = class Client {
 
         const id = new Date().getTime().toString();
         const envVar = `ID = ${id}`
+        
+        process.env.ID = String(id);
 
         if (fs.existsSync('.env')) {
             const envVars = fs.readFileSync('.env', 'utf-8').split(os.EOL).filter(envVar => !!envVar);
@@ -121,7 +123,7 @@ module.exports = class Client {
 
                     // if data is downloaded instantly a timeout error is thrown
                     // wait a minute for the data to reach the nodes responsible for storing it (swarm: area of responsibility)
-                    await utils.core.sleep(30);
+                    await utils.core.sleep(1);
                     this.socket.emit('uploaded', ...this.state.args())
                 }
             } catch (error) {
