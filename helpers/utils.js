@@ -127,6 +127,7 @@ const core = {
     },
 
     byteSize (dataSize) {
+        // FIXME: fails in some cases
         if (typeof dataSize === 'number') return dataSize;
 
         const sizeMap = { 'b': 1, 'kb': 1024, 'mb': 1024 * 1024 }

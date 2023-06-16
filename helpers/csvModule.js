@@ -3,6 +3,7 @@ const os = require('os');
 const path = require('path');
 const assert = require('assert');
 const prompt = require('prompt-sync')({sigint: true});
+const utils = require('./utils');
 const eventHeaders = ['Date','Total Events','ID' , 'Retrieval Time All (ms)', 'Retrieval Time Specific (ms)', 'Decoding Time (ms)', 'Total Time (ms)'];
 const indexedEventHeaders = ['Date', 'Total Events', 'ID' , 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)'];
 const storageHeaders = ['Date','Retrieval Time (ms)'];
@@ -286,10 +287,84 @@ function average(filePath){
     }
 }
 
+function applyToFiles(root, callback, options = { extension: '.csv' }) {
+    const items = fs.readdirSync(root);
+
+    for (const item of items) {
+        const itemPath = path.join(root, item);
+
+        if (fs.lstatSync(itemPath).isDirectory()) {
+            applyToFiles(itemPath, callback);
+        } else if (path.parse(itemPath).ext === options.extension) {
+            callback(itemPath);
+        }
+    }
+}
+
+function applyToDirectories(root, dir, callback) {
+    const items = fs.readdirSync(root);
+
+    for (const item of items) {
+        const itemPath = path.join(root, item);
+
+        if (fs.lstatSync(itemPath).isDirectory()) {
+            if (path.basename(itemPath) === dir) {
+                callback(itemPath)
+            } else {
+                applyToDirectories(itemPath, dir, callback);
+            }
+        }
+    }
+}
+
+function calculateAverageLatencyBySize(csvPath, { outDir = 'average-latency-by-size', sizePoints = ['4kb', '16kb', '64kb', '256kb', '1mb', '4mb', '16mb'] } = {}) {
+    const sizePointsInBytes = sizePoints.map(size => utils.core.byteSize(size))
+    const csv = readCsvAsArray(csvPath);
+    const headers = csv[0];
+    const data = csv.slice(1);
+    const sizeIndex = headers.findIndex(header => header.toLowerCase().includes('size (bytes)'));
+    const latencyIndex = headers.findIndex(header => header.toLowerCase().includes('time'));
+    const mappedRecords = new Map();
+
+    for (const row of data) {
+        const size = row[sizeIndex]
+        const latency = row[latencyIndex]
+        
+        if (size && !isNaN(size)) {
+            if (!sizePointsInBytes.includes(Number(size))) {
+                throw new Error(`Size ${size}, in record ${csvPath} does not match any of the provided sizePoints (${sizePointsInBytes})`)
+            }
+
+            if (!mappedRecords.has(size)) {
+                mappedRecords.set(size, []);
+            }
+
+            mappedRecords.get(size).push(latency);
+        }
+    }
+
+    const recordsPerSize = [...mappedRecords.values()].map(records => records.length);
+    const sampleSize = Math.min(...recordsPerSize);
+    const avg = { sampleSize };
+
+    for (const [size, records] of mappedRecords.entries()) {
+        avg[size] = records.slice(0, sampleSize).reduce((sum, currentValue) => sum + parseFloat(currentValue), 0) / sampleSize;
+    }
+
+    const jsonName = `${path.parse(csvPath).name}.json`;
+    const jsonPath = path.join(path.dirname(csvPath), outDir, jsonName);
+
+    if (!fs.existsSync(path.dirname(jsonPath))) fs.mkdirSync(path.dirname(jsonPath))
+    fs.writeFileSync(jsonPath, JSON.stringify(avg, null, 4))
+}
+
 
 module.exports = {
     CSV,
     average,
     readCsvAsArray,
-    readLines
+    readLines,
+    applyToFiles,
+    applyToDirectories,
+    calculateAverageLatencyBySize
 };
