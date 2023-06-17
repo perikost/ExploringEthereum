@@ -5,6 +5,8 @@ const { CSV } = require('../csvModule.js');
 const utils = require('../utils.js');
 const performance = require('perf_hooks').performance;
 const UnixFS = require('ipfs-unixfs');
+const Logger = require('../logger');
+const logger = new Logger()
 //const BigNumber = require('bignumber.js');
 
 
@@ -160,7 +162,7 @@ class IpfsBase {
         const stringDiff = (diff < 1024 ** 2)
             ? `${(diff / 1024).toFixed(2)}kb`
             : `${(diff / 1024 ** 2).toFixed(2)}mb`;
-        console.log(`Cleared my ipfs repo. Deleted approximately ${stringDiff}`);
+        logger.info(`Cleared my ipfs repo. Deleted approximately ${stringDiff}`);
     }
 
     async findContentProvs(cid, timeout = 60000) {
@@ -189,12 +191,12 @@ class IpfsBase {
 
             if (connected) {
                 await this.ipfs.swarm.disconnect(connected.addr.toString() + '/p2p/' + connected.peer);
-                console.log('Disconnected from peer: ', peerId);
+                logger.info('Disconnected from peer: ', peerId);
             } else {
-                console.log('Not connected to peer: ', peerId);
+                logger.info('Not connected to peer: ', peerId);
             }
         } catch (error) {
-            console.log('Could not disconnect from peer', peerId);
+            logger.info('Could not disconnect from peer', peerId);
         }
     }
 

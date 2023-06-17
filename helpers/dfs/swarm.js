@@ -3,6 +3,8 @@ const performance = require('perf_hooks').performance;
 const { Bee, BeeDebug } = require("@ethersphere/bee-js");
 const { CSV } = require('../csvModule.js');
 const http = require("http");
+const Logger = require('../logger');
+const logger = new Logger()
 
 const POSTAGE_STAMPS_AMOUNT = '10000000';
 const POSTAGE_STAMPS_DEPTH = 20
@@ -61,7 +63,7 @@ class SwarmBase {
         let batchId = await this.findUsableBatch();
         if (!batchId) {
             batchId = await this.beeDebug.createPostageBatch(POSTAGE_STAMPS_AMOUNT, POSTAGE_STAMPS_DEPTH)
-            console.log('\nUsing newly created batchId:', batchId);
+            logger.info('Using newly created batchId:', batchId);
         }
         return batchId;
     }
@@ -132,12 +134,12 @@ class SwarmBase {
 
             if (connected) {
                 await this.beeDebug.removePeer(peerAddress);
-                console.log('Disconnected from peer: ', peerAddress);
+                logger.info('Disconnected from peer: ', peerAddress);
             } else {
-                console.log('Not connected to peer: ', peerAddress);
+                logger.info('Not connected to peer: ', peerAddress);
             }
         } catch (error) {
-            console.log('Could not disconnect from peer', peerAddress);
+            logger.info('Could not disconnect from peer', peerAddress);
         }
     }
 

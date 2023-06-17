@@ -4,6 +4,8 @@ const path = require('path');
 const assert = require('assert');
 const prompt = require('prompt-sync')({sigint: true});
 const utils = require('./utils');
+const Logger = require('./logger');
+const logger = new Logger()
 const eventHeaders = ['Date','Total Events','ID' , 'Retrieval Time All (ms)', 'Retrieval Time Specific (ms)', 'Decoding Time (ms)', 'Total Time (ms)'];
 const indexedEventHeaders = ['Date', 'Total Events', 'ID' , 'Retrieval Time (ms)','Decoding Time (ms)', 'Total Time (ms)'];
 const storageHeaders = ['Date','Retrieval Time (ms)'];
@@ -48,7 +50,7 @@ class CSV {
     }
 
     writeStats(toWrite, network, mode, csvName, conName = null, subfolder = null){
-        console.log(`Successfully executed  |${csvName}| \n\n`);
+        logger.debug(`Successfully executed  |${csvName}|`);
 
         network = network.toLowerCase();
         this.network = network;
@@ -138,13 +140,13 @@ function chooseRootFolder(rootFolder){
     
         if (choice >=0 && choice <= folders.length) return path.join(rootFolder, folders[choice]);
         else{
-            console.log('Chosen folder out of bounds. Csv records will be added in a new folder.');
+            logger.info('Chosen folder out of bounds. Csv records will be added in a new folder.');
             return null;
         }
         
     }
 
-    console.log('Csv records will be added in a new folder.');
+    logger.info('Csv records will be added in a new folder.');
     return null;
 }
 

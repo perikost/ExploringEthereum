@@ -215,7 +215,7 @@ describe('Server auto mode', () => {
         expect.assertions(9)
 
         client1.socket.on('upload', (round) => {
-            expect(console.log).toHaveBeenCalledWith(`\nUser ${client1.user} started the experiment: `, client1.exp)
+            expect(console.log).toHaveBeenCalledWith(`User ${client1.user} started the experiment: `, client1.exp)
             expect(round).toBe(1);
             expect(utils.core.cancelKeypress).toHaveBeenCalledTimes(3)
             expect(client1.methods.upload).toHaveBeenCalledTimes(1)

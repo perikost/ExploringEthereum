@@ -1,6 +1,8 @@
 const utils = require('../utils.js');
 const IpfsBase = require('./ipfs');
 const SwarmBase = require('./swarm.js');
+const Logger = require('../logger');
+const logger = new Logger()
 
 const OPTIONS = {
     retry: 0,
@@ -28,34 +30,34 @@ function Experiment(Base) {
                 try {
                     const result = await method.apply(this, params);
                     errorCount
-                        ? console.log('\n', `Successfully executed ${method.name}() after ${errorCount} trie(s)`)
-                        : console.log('\n', `Successfully executed ${method.name}()`)
+                        ? logger.debug(`Successfully executed ${method.name}() after ${errorCount} trie(s)`)
+                        : logger.debug(`Successfully executed ${method.name}()`)
                     return result;
                 } catch (error) {
-                    console.log('\n', `An error ocurred while executing ${method.name}().`, error.toString());
+                    logger.info(`An error ocurred while executing ${method.name}().`, error.toString());
                     console.log('Press ANY key to retry, CTRL + C to abort the experiments or ENTER to skip current execution');
                     const key = await utils.core.keypress(10);
 
                     if (key) {
                         // return on CTRL + ENTER so that the experiments can continue
                         if (key.name === 'return') {
-                            console.log('Skipping...');
+                            logger.info('Skipping...');
                             return;
                         }
 
                         // rethrow the error on ctrl + C
                         if (key.ctrl && key.name === 'c') {
-                            console.log('Aborting...');
+                            logger.info('Aborting...');
                             throw error;
                         }
                     }
 
-                    console.log('Retrying...');
+                    logger.info('Retrying...');
                     errorCount++;
 
                     // return when max tries are exceeded so that the experiments can continue
                     if (this.options.retry === errorCount) {
-                        console.log('Exceeded max tries. Skipping...');
+                        logger.info('Exceeded max tries. Skipping...');
                         return;
                     }
                 }

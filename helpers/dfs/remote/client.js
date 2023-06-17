@@ -5,6 +5,8 @@ const { io } = require('socket.io-client');
 const os = require('os')
 const utils = require('../../utils');
 const { SingleStateStore } = require('./state');
+const Logger = require('../../logger');
+const logger = new Logger()
 
 module.exports = class Client {
     socket;
@@ -48,7 +50,7 @@ module.exports = class Client {
 
     _start(interactive = false) {
         const start = () => {
-            console.log('I started the experiment');
+            logger.info('I started the experiment')
             this.socket.emit('start', this.exp);
         }
 
@@ -98,14 +100,14 @@ module.exports = class Client {
                 } else {
                     const results = await this.methods.download(identifiers)
                     this.state.event('downloaded').args([{results}]).round(round);
-                    console.log('\n' + `Round ${round}: I downloaded the data`);
+                    logger.info(`Round ${round}: I downloaded the data`)
 
                     await utils.core.sleep(1)
                     this.socket.emit('downloaded', ...this.state.args())
                 }
             } catch (error) {
-                console.log('Could not download one of', identifiers)
-                console.log(error)
+                logger.info('Could not download one of', identifiers)
+                logger.error(error)
                 this.socket.emit('client-error', error.toString());
             }
         });
@@ -119,7 +121,7 @@ module.exports = class Client {
                 } else {
                     const results = await this.methods.upload();
                     this.state.event('uploaded').args([results]).round(round);
-                    console.log(`Round ${round}: I uploaded the data`);
+                    logger.info(`Round ${round}: I uploaded the data`);
 
                     // if data is downloaded instantly a timeout error is thrown
                     // wait a minute for the data to reach the nodes responsible for storing it (swarm: area of responsibility)
@@ -127,7 +129,8 @@ module.exports = class Client {
                     this.socket.emit('uploaded', ...this.state.args())
                 }
             } catch (error) {
-                console.log(error)
+                logger.info('Could not upload data in round', round)
+                logger.error(error)
                 this.socket.emit('client-error', error.toString());
             }
         });

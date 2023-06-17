@@ -3,7 +3,8 @@ const { CSV } = require('../../csvModule.js');
 const IpfsBase = require('../ipfs');
 const SwarmBase = require('../swarm');
 const { MultiStateStore } = require('./state');
-
+const Logger = require('../../logger');
+const logger = new Logger()
 
 const ROUND = {
     id: 0,
@@ -51,7 +52,7 @@ module.exports.Server = class Server {
             this.handleConnection(socket);
 
             socket.on('disconnect', () => {
-                console.log(`User ${socket.data.user} disconnected`);
+                logger.info(`User ${socket.data.user} disconnected`);
                 
                 // update running clients counter when a client disconnects  
                 if (this.runningClients && socket.data.participant) this.runningClients--;
@@ -91,7 +92,7 @@ module.exports.Server = class Server {
             })
 
             socket.on('start', (experiment) => {
-                console.log(`\nUser ${socket.data.user} started the experiment: `, experiment);
+                logger.info(`User ${socket.data.user} started the experiment: `, experiment);
    
                 this.io.timeout(10000).emit("experiment-started", (err, responses) => {
                     if (err) {
@@ -119,7 +120,7 @@ module.exports.Server = class Server {
                     // write the results
                     this.writeRoundResults()
 
-                    console.log(`Round ${round.id}: All nodes downloaded the data`);
+                    logger.info(`Round ${round.id}: All nodes downloaded the data`);
 
                     // start next round
                     this.nextRound();
@@ -127,7 +128,7 @@ module.exports.Server = class Server {
             });
 
             socket.on('client-error', (err) => {
-                console.log(`\nUser ${socket.data.user} encountered the following error: `, err);
+                logger.info(`User ${socket.data.user} encountered the following error: `, err);
                 this.io.emit('error');
             });
 
@@ -135,6 +136,12 @@ module.exports.Server = class Server {
 
             // Register a catch-all listener for incoming events
             socket.prependAny((event, ...args) => {
+                if (this.experiment && this.experiment.round) {
+                    logger.debug(`RECEIVED ${event} from user ${socket.data.user} in round ${this.experiment.round.id} with args: `, ...args);
+                } else {
+                    logger.debug(`RECEIVED ${event} from user ${socket.data.user} with args: `, ...args);
+                }
+
                 const client = this.getClient(socket);
                 if (client && event === client.state.response()) {
                     client.state.status('got').args(args);
@@ -142,7 +149,13 @@ module.exports.Server = class Server {
             });
 
             // Register a catch-all listener for outgoing events.
-            socket.prependAnyOutgoing((event, ...args) => { 
+            socket.prependAnyOutgoing((event, ...args) => {
+                if (this.experiment && this.experiment.round) {
+                    logger.debug(`SENT ${event} to user ${socket.data.user} in round ${this.experiment.round.id} with args: `, ...args);
+                } else {
+                    logger.debug(`SENT ${event} to user ${socket.data.user} with args: `, ...args);
+                }
+
                 const client = this.getClient(socket);
                 if (client && eventsResponseMap[event]) {
                     client.state.response(eventsResponseMap[event]).event(event).status('sent').args(args).round(this.experiment.round)
@@ -188,7 +201,7 @@ module.exports.Server = class Server {
         } else {
             this.state.clear();
             this.experiment = JSON.parse(JSON.stringify(EXPERIMENT));
-            console.log('Experiment finished\n');
+            logger.info('Experiment finished');
             this.io.emit('experiment-finished')
         }
     }
@@ -208,7 +221,7 @@ module.exports.Server = class Server {
             }
             return false;
         } catch (error) {
-            console.log(error.toString());
+            logger.error(error);
         }
     }
 
@@ -222,18 +235,26 @@ module.exports.Server = class Server {
     async handleConnection(socket) {
         socket.data.user = socket.handshake.auth.user;
         socket.data.id = socket.handshake.auth.id;
-        console.log(`User ${socket.data.user} connected`);
+        logger.info(`User ${socket.data.user} connected`);
 
         // handle reconnection of clients
         const client = this.getClient(socket);
         if (client) {
-            console.log('re-connected')
+            logger.info(`User ${socket.data.user} re-connected`);
+            
+            if (client.socket === socket.id) {
+                logger.debug(`Re-connected with the same id. Old: ${client.socket} New ${socket.id}`);
+            } else {
+                logger.debug(`Re-connected with the same id. Old: ${client.socket} New ${socket.id}`);
+            }
+
             // the client has reconnected, update their socket id 
             client.socket = socket.id;
             // get client state and ask them to re-execute if necessary
             if (client.state.status() === 'sent') {
                 await new Promise(resolve => setTimeout(resolve, 5000));
                 this.io.to(client.socket).emit(client.state.event(), ...client.state.args());
+                logger.debug(`In round ${this.experiment.round.id}, event ${client.state.event()} for round ${client.state.round().id} was resent to user ${socket.data.user} with args: `, ...client.state.args());
             }
         }
     }
