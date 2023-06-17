@@ -2,9 +2,18 @@ const fs = require('fs');
 const path = require('path')
 const os = require('os')
 
-function getModuleName() {
-    const callingFile = module.parent.filename;
-    return path.basename(callingFile);
+// TODO: Find a proper way to extract the caller's module name
+function getCallerModuleName() {
+    try {
+        const stackTrace = new Error().stack;
+        const callerLine = stackTrace.split(os.EOL)[3];
+
+        // Extract the module name from the caller line
+        const callerModuleName = callerLine.match(/\((.*):\d+:\d+\)/)[1];
+        return path.basename(callerModuleName);
+    } catch (error) {
+        return 'Unknown'
+    }
 }
 
 function convertToString(input) {
@@ -46,7 +55,8 @@ module.exports = class Logger {
             if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
             // Create log file
-            const initialLog = `Log file created at: ${timestamp.toString().substring(0, 24).replace(/ |:/g, '_')}`;
+            const mainModule = require.main;
+            const initialLog = `Log file created at: ${timestamp.toString().substring(0, 24).replace(/ |:/g, '_')} by executing: ${mainModule ? path.basename(mainModule.filename) : 'Unknown'}`;
             fs.writeFileSync(this.logFilePath, initialLog + os.EOL);
         }
     }
@@ -64,7 +74,7 @@ module.exports = class Logger {
             console.log(...message);
         }
 
-        const moduleName = getModuleName();
+        const moduleName = getCallerModuleName();
         const parsedMessage = parseMessage(message);
         const logMessage = `[INFO] ${moduleName}: ${parsedMessage}`;
 
@@ -76,7 +86,7 @@ module.exports = class Logger {
             console.warn(...message);
         }
 
-        const moduleName = getModuleName();
+        const moduleName = getCallerModuleName();
         const parsedMessage = parseMessage(message);
         const logMessage = `[WARN] ${moduleName}: ${parsedMessage}`;
 
@@ -96,7 +106,7 @@ module.exports = class Logger {
             console.error(message);
         }
 
-        const moduleName = getModuleName();
+        const moduleName = getCallerModuleName();
         const logMessage = `[ERROR] ${moduleName}: ${message}`;
 
         this.logToFile(logMessage);
@@ -107,7 +117,7 @@ module.exports = class Logger {
             console.log(...message);
         }
 
-        const moduleName = getModuleName();
+        const moduleName = getCallerModuleName();
         const parsedMessage = parseMessage(message);
         const logMessage = `[DEBUG] ${moduleName}: ${parsedMessage}`;
 
