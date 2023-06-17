@@ -10,6 +10,7 @@ function getModuleName() {
 function convertToString(input) {
     if (typeof input === 'string') return input;
     if (typeof input === 'object') return JSON.stringify(input);
+    if (typeof input === 'function') return input.name || 'callback';
 
     return String(input);
 }
