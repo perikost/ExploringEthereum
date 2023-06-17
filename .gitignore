@@ -3,6 +3,7 @@ csv_records/
 local_blockchain/
 drafts/
 .state/
+.logs/
 .env
 
 # ignore nodenv's local version

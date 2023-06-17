@@ -4,7 +4,7 @@
   "description": "",
   "main": "interact.js",
   "scripts": {
-    "test": "jest --runInBand",
+    "test": "LOGS_PATH=./test_logs jest --runInBand",
     "server": "node helpers/dfs/remote/run-server.js",
     "remote-experiments": "node dfsRemoteExperiments.js",
     "decrypt": "node helpers/decryptAccount.js",
