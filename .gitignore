@@ -2,6 +2,8 @@ node_modules/
 csv_records/
 local_blockchain/
 drafts/
+test_logs/
+test_csv_records/
 .state/
 .logs/
 .env
