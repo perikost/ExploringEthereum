@@ -33,12 +33,14 @@ module.exports = class Logger {
 
     constructor(logLevel = 1, logsPath = './.logs', logName = null) {
         this.logLevel = process.env.LOG_LEVEL || logLevel;
-
-        logsPath = process.env.LOGS_PATH || logsPath;
-        this.configLogPath(logName, logsPath)
+        this.logsPath = process.env.LOGS_PATH || logsPath;
+        this.logName = logName;
     }
 
-    configLogPath(log, dir = './.logs') {
+    configLogPath() {
+        const log = this.logName;
+        const dir = this.logsPath;
+ 
         if (log && fs.existsSync(path.join(dir, log))) {
             this.logFilePath = path.join(dir, log);
         } else if (fs.existsSync(dir)) {
@@ -48,8 +50,8 @@ module.exports = class Logger {
 
         if (!this.logFilePath) {
             const timestamp = new Date();
-            log = log || `log_${timestamp.toISOString().replace(/[:.]/g, '')}_${process.pid}`;
-            this.logFilePath = path.join(dir, log);
+            const logFile = log || `log_${timestamp.toISOString().replace(/[:.]/g, '')}_${process.pid}`;
+            this.logFilePath = path.join(dir, logFile);
 
             // Create logs directory if it doesn't exist
             if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -63,6 +65,7 @@ module.exports = class Logger {
 
     logToFile(logMessage) {
         try {
+            if (!this.logFilePath) this.configLogPath();
             fs.appendFileSync(this.logFilePath, logMessage + os.EOL);            
         } catch (error) {
             console.error(`Error writing log to file: ${error}`);

@@ -26,9 +26,10 @@ describe('Logger', () => {
     });
 
 
-    test('constructor should create log file with initial log entry', () => {
+    test('configLogPath method should create log file with initial log entry', () => {
         // Create a new instance of Logger
-        new Logger(1, logsPath, logFile);
+        const logger = new Logger(1, logsPath, logFile);
+        logger.configLogPath();
 
         // Check if log file exists
         expect(fs.existsSync).toHaveBeenCalledWith(path.join(logsPath, logFile));
