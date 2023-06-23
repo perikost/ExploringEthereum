@@ -3,6 +3,8 @@ const { ExtendedSwarmExperiment, ExtendedIpfsExperiment } = require('./helpers/d
 const { program } = require('commander');
 const { MultiStateStore } = require('./helpers/dfs/remote/state');
 const utils = require('./helpers/utils');
+const Logger = require('./helpers/logger');
+const logger = new Logger()
 
 function parseIntOption(value) {
     const parsedValue = parseInt(value, 10);
@@ -106,6 +108,8 @@ function loadExperimentsState(experiments, times, network) {
         state.add(network).experiments(experiments.map(exp => ({name: exp.name, executed: 0})));
         state.add(network).times(times);
         experiments.forEach(exp => exp.times = times);
+        
+        logger.debug(`Created state for experiments on ${network}. State:`, state.get(network).get());
     } else {
         for (let i = 0; i < experiments.length; i++) {
             const experiment = experiments[i];
@@ -118,6 +122,8 @@ function loadExperimentsState(experiments, times, network) {
                 i--;
             }
         }
+
+        logger.debug(`Loaded existent state for experiments on ${network}. State:`, state.get(network).get());
     }
 }
 
@@ -131,6 +137,8 @@ function updateExperimentState(experiment, network) {
         }
     }
     state.get(network).experiments(experiments);
+
+    logger.debug(`Updated state for experiments on ${network}. State:`, state.get(network).get());
 }
 
 
@@ -139,6 +147,8 @@ function updateExperimentState(experiment, network) {
     const client = new Client(ip, port);
 
     let ipfs, swarm;
+
+    logger.debug('Experiments started with user options:', userOptions)
 
     try {
         if (ipfsOpt) {
@@ -176,8 +186,9 @@ function updateExperimentState(experiment, network) {
         state.clear();
         if (ipfs) await ipfs.clearRepo();
     } catch (error) {
-        console.log(error);
+        logger.error(error);
     }
 
     client.disconnect();
+    logger.info('Experiments finished.')
 })();
