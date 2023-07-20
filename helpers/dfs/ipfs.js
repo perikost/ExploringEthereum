@@ -217,6 +217,67 @@ class IpfsBase {
         }
         return reachable
     }
+
+    // Importing the chunker from 'ipfs-unixfs-importer/chunker/fixed-size.js doesn't work.
+    // Used implementation from: https://github.com/ipfs/js-ipfs-unixfs/blob/master/packages/ipfs-unixfs-importer/src/chunker/fixed-size.ts
+    static chunk(data, options) {
+        function contentAsAsyncIterable(content) {
+            try {
+                if (content instanceof Uint8Array) {
+                    return (async function* () {
+                        yield content
+                    }())
+                } else if (isIterable(content)) {
+                    return (async function* () {
+                        yield* content
+                    }())
+                } else if (isAsyncIterable(content)) {
+                    return content
+                }
+            } catch {
+                throw new Error('Content was invalid')
+            }
+
+            throw new Error('Content was invalid')
+        }
+
+        const { Uint8ArrayList } = options;
+        const DEFAULT_CHUNK_SIZE = 262144;
+        const fixedSize = (options = {}) => {
+            const chunkSize = options.chunkSize ?? DEFAULT_CHUNK_SIZE;
+            return async function* fixedSizeChunker(source) {
+                let list = new Uint8ArrayList();
+                let currentLength = 0;
+                let emitted = false;
+                for await (const buffer of source) {
+                    list.append(buffer);
+                    currentLength += buffer.length;
+                    while (currentLength >= chunkSize) {
+                        yield list.slice(0, chunkSize);
+                        emitted = true;
+                        // throw away consumed bytes
+                        if (chunkSize === list.length) {
+                            list = new Uint8ArrayList();
+                            currentLength = 0;
+                        }
+                        else {
+                            const newBl = new Uint8ArrayList();
+                            newBl.append(list.sublist(chunkSize));
+                            list = newBl;
+                            // update our offset
+                            currentLength -= chunkSize;
+                        }
+                    }
+                }
+                if (!emitted || currentLength > 0) {
+                    // return any remaining bytes
+                    yield list.subarray(0, currentLength);
+                }
+            };
+        };
+
+        return fixedSize(options)(contentAsAsyncIterable(data))
+    }
 }
 
 
